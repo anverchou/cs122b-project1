@@ -92,6 +92,40 @@ public class SingleMovieServlet extends HttpServlet {
             if (!anyGenre) out.println("<li>N/A</li>");
             out.println("</ul>");
 
+            // Print stars that are connected with the movie
+            out.println("<h2>Stars</h2>");
+            out.println("<ul>");
+
+            // Stars query
+            String starsQuery =
+                    "SELECT s.id, s.name " +
+                            "FROM stars_in_movies sim " +
+                            "JOIN stars s ON s.id = sim.starId " +
+                            "WHERE sim.movieId = ? " +
+                            "ORDER BY s.name";
+
+            // Check if stars exist
+            boolean anyStar = false;
+
+            try (PreparedStatement ps = connection.prepareStatement(starsQuery)) {
+                ps.setString(1, movieId);
+                try (ResultSet rs = ps.executeQuery()) {
+                    while (rs.next()) {
+                        anyStar = true;
+                        String starId = rs.getString("id");
+                        String starName = rs.getString("name");
+
+                        out.println("<li><a href='singlestar?id=" + escapeHtml(starId) + "'>"
+                                + escapeHtml(starName) + "</a></li>");
+                    }
+                }
+            }
+
+            // Print out stars that correspond to the movie
+            if (!anyStar) {
+                out.println("<li>N/A</li>");
+            }
+            out.println("</ul>");
             connection.close();
 
         } catch (Exception e) {
