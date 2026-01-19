@@ -12,7 +12,7 @@ public class MovielistServlet extends HttpServlet {
 
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws IOException {
         String loginUser = "root";
-        String loginPasswd = "pasword";
+        String loginPasswd = "pswd";
         String loginUrl = "jdbc:mysql://localhost:3306/moviedb";
 
         response.setContentType("text/html");
@@ -24,38 +24,55 @@ public class MovielistServlet extends HttpServlet {
             Connection connection = DriverManager.getConnection(loginUrl, loginUser, loginPasswd);
             Statement statement = connection.createStatement();
 
-            String query = "SELECT * FROM movies LIMIT 20";
+            String query =
+                    "SELECT m.id, m.title, m.year, m.director, " +
+                            // First three genres of movie
+                            "       ( " +
+                            "         SELECT GROUP_CONCAT(t.name ORDER BY t.name SEPARATOR ', ') " +
+                            "         FROM ( " +
+                            "           SELECT DISTINCT g.name AS name " +
+                            "           FROM genres_in_movies gim " +
+                            "           JOIN genres g ON g.id = gim.genreId " +
+                            "           WHERE gim.movieId = m.id " +
+                            "           ORDER BY g.name " +
+                            "           LIMIT 3 " +
+                            "         ) AS t " +
+                            "       ) AS genres " +
+                            "FROM movies m " +
+                            "LIMIT 20";
 
             ResultSet resultSet = statement.executeQuery(query);
 
             out.println("<body>");
-            out.println("<h1>Top 20 Rated Movies</h1>");
+            out.println("<h1>Movie List (Top 20)</h1>");
             out.println("<table border='1'>");
 
             out.println("<tr>");
             out.println("<th>title</th>");
             out.println("<th>year</th>");
             out.println("<th>director</th>");
-//            out.println("<th>genres (first 3)</th>");
-//            out.println("<th>stars (first 3)</th>");
-//            out.println("<th>rating</th>");
+            out.println("<th>genres (up to 3)</th>");
             out.println("</tr>");
 
             while (resultSet.next()) {
+                String movieId = resultSet.getString("id");
                 String title = resultSet.getString("title");
                 int year = resultSet.getInt("year");
                 String director = resultSet.getString("director");
-//                String genres3 = resultSet.getString("genres3");
-//                String stars3 = resultSet.getString("stars3");
-//                float rating = resultSet.getFloat("rating");
+                String genres = resultSet.getString("genres");
 
+                // If there is no applicable genre, make it N/A
+                if (genres == null || genres.trim().isEmpty()) {
+                    genres = "N/A";
+                }
+
+                // Make the Movie names a hyperlink
                 out.println("<tr>");
-                out.println("<td>" + title + "</td>");
+                out.println("<td><a href='single-movie?id=" + escapeHtml(movieId) + "'>"
+                        + escapeHtml(title) + "</a></td>");
                 out.println("<td>" + year + "</td>");
-                out.println("<td>" + director + "</td>");
-//                out.println("<td>" + (genres3 == null ? "" : genres3) + "</td>");
-//                out.println("<td>" + (stars3 == null ? "" : stars3) + "</td>");
-//                out.println("<td>" + rating + "</td>");
+                out.println("<td>" + escapeHtml(director) + "</td>");
+                out.println("<td>" + escapeHtml(genres) + "</td>");
                 out.println("</tr>");
             }
 
@@ -68,10 +85,19 @@ public class MovielistServlet extends HttpServlet {
 
         } catch (Exception e) {
             request.getServletContext().log("Error: ", e);
-            out.println("<body><p>Exception in doGet: " + e.getMessage() + "</p></body>");
+            out.println("<body><p>Exception in doGet: " + escapeHtml(e.getMessage()) + "</p></body>");
         }
 
         out.println("</html>");
         out.close();
+    }
+
+    // Hyperlink injection
+    private static String escapeHtml(String s) {
+        if (s == null) return "";
+        return s.replace("&", "&amp;")
+                .replace("<", "&lt;")
+                .replace(">", "&gt;")
+                .replace("\"", "&quot;");
     }
 }
