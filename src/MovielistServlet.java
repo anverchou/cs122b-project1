@@ -84,13 +84,13 @@ public class MovielistServlet extends HttpServlet {
                 // Set values to N/A if there is no value
                 if (genres == null || genres.trim().isEmpty()) genres = "N/A";
                 if (stars == null || stars.trim().isEmpty()) stars = "N/A";
+
                 Float ratingObj = (Float)resultSet.getObject("rating");
-                // Return N/A if there is no rating
                 String rating = (ratingObj == null) ? "N/A" : String.valueOf(ratingObj);
 
                 // Make the Movie names a hyperlink
                 out.println("<tr>");
-                out.println("<td><a href='single-movie?id=" + escapeHtml(movieId) + "'>"
+                out.println("<td><a href='singlemovie?id=" + escapeHtml(movieId) + "'>"
                         + escapeHtml(title) + "</a></td>");
                 out.println("<td>" + year + "</td>");
                 out.println("<td>" + escapeHtml(director) + "</td>");
