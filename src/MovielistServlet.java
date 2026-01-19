@@ -12,7 +12,7 @@ public class MovielistServlet extends HttpServlet {
 
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws IOException {
         String loginUser = "root";
-        String loginPasswd = "pswd";
+        String loginPasswd = "Teehee1324!";
         String loginUrl = "jdbc:mysql://localhost:3306/moviedb";
 
         response.setContentType("text/html");
@@ -26,6 +26,7 @@ public class MovielistServlet extends HttpServlet {
 
             String query =
                     "SELECT m.id, m.title, m.year, m.director, " +
+
                             // First three genres of movie
                             "       ( " +
                             "         SELECT GROUP_CONCAT(t.name ORDER BY t.name SEPARATOR ', ') " +
@@ -37,21 +38,35 @@ public class MovielistServlet extends HttpServlet {
                             "           ORDER BY g.name " +
                             "           LIMIT 3 " +
                             "         ) AS t " +
-                            "       ) AS genres " +
+                            "       ) AS genres, " +
+
+                            // First three stars of movie
+                            "         SELECT GROUP_CONCAT(t2.name ORDER BY t2.name SEPARATOR ', ') " +
+                            "         FROM ( " +
+                            "           SELECT DISTINCT s.name AS name " +
+                            "           FROM stars_in_movies sim " +
+                            "           JOIN stars s ON s.id = sim.starId " +
+                            "           WHERE sim.movieId = m.id " +
+                            "           ORDER BY s.name " +
+                            "           LIMIT 3 " +
+                            "         ) AS t2 " +
+                            "       ) AS stars " +
+
                             "FROM movies m " +
                             "LIMIT 20";
 
             ResultSet resultSet = statement.executeQuery(query);
 
             out.println("<body>");
-            out.println("<h1>Movie List (Top 20)</h1>");
+            out.println("<h1>Movie List</h1>");
             out.println("<table border='1'>");
 
             out.println("<tr>");
-            out.println("<th>title</th>");
-            out.println("<th>year</th>");
-            out.println("<th>director</th>");
-            out.println("<th>genres (up to 3)</th>");
+            out.println("<th>Title</th>");
+            out.println("<th>Year</th>");
+            out.println("<th>Director</th>");
+            out.println("<th>3 Genres</th>");
+            out.println("<th>3 Stars</th>");
             out.println("</tr>");
 
             while (resultSet.next()) {
@@ -60,11 +75,7 @@ public class MovielistServlet extends HttpServlet {
                 int year = resultSet.getInt("year");
                 String director = resultSet.getString("director");
                 String genres = resultSet.getString("genres");
-
-                // If there is no applicable genre, make it N/A
-                if (genres == null || genres.trim().isEmpty()) {
-                    genres = "N/A";
-                }
+                String stars = resultSet.getString("stars");
 
                 // Make the Movie names a hyperlink
                 out.println("<tr>");
@@ -73,6 +84,7 @@ public class MovielistServlet extends HttpServlet {
                 out.println("<td>" + year + "</td>");
                 out.println("<td>" + escapeHtml(director) + "</td>");
                 out.println("<td>" + escapeHtml(genres) + "</td>");
+                out.println("<td>" + escapeHtml(stars) + "</td>");
                 out.println("</tr>");
             }
 
