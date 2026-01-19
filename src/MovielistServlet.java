@@ -42,16 +42,16 @@ public class MovielistServlet extends HttpServlet {
 
                             // First three stars of movie
                             " ( " +
-                            "   SELECT GROUP_CONCAT(t2.name ORDER BY t2.name SEPARATOR ', ') " +
+                            "   SELECT GROUP_CONCAT(t2.pair SEPARATOR ', ') " +
                             "   FROM ( " +
-                            "     SELECT DISTINCT s.name AS name " +
+                            "     SELECT DISTINCT CONCAT(s.id, ':', s.name) AS pair " +
                             "     FROM stars_in_movies sim " +
                             "     JOIN stars s ON s.id = sim.starId " +
                             "     WHERE sim.movieId = m.id " +
-                            "     ORDER BY s.name " +
                             "     LIMIT 3 " +
                             "   ) AS t2 " +
                             " ) AS stars " +
+
 
                             "FROM movies m " +
                             // Add rating to query
@@ -95,7 +95,25 @@ public class MovielistServlet extends HttpServlet {
                 out.println("<td>" + year + "</td>");
                 out.println("<td>" + escapeHtml(director) + "</td>");
                 out.println("<td>" + escapeHtml(genres) + "</td>");
-                out.println("<td>" + escapeHtml(stars) + "</td>");
+                // Hyperlink stars
+                out.println("<td>");
+                if (stars == null || stars.trim().isEmpty()) {
+                    out.println("N/A");
+                } else {
+                    // Formatting of stars in order
+                    String[] pairs = stars.split(", ");
+                    for (int i = 0; i < pairs.length; i++) {
+                        String[] parts = pairs[i].split(":", 2);
+                        String starId = parts[0];
+                        String starName = (parts.length > 1) ? parts[1] : parts[0];
+
+                        out.print("<a href='singlestar?id=" + escapeHtml(starId) + "'>"
+                                + escapeHtml(starName) + "</a>");
+                        if (i < pairs.length - 1) out.print(", ");
+                    }
+                }
+                out.println("</td>");
+
                 out.println("<td>" + escapeHtml(rating) + "</td>");
                 out.println("</tr>");
             }
