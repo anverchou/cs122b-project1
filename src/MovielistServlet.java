@@ -25,34 +25,37 @@ public class MovielistServlet extends HttpServlet {
             Statement statement = connection.createStatement();
 
             String query =
-                    "SELECT m.id, m.title, m.year, m.director, " +
+                    "SELECT m.id, m.title, m.year, m.director, IFNULL(r.rating, NULL) AS rating, " +
 
                             // First three genres of movie
-                            "       ( " +
-                            "         SELECT GROUP_CONCAT(t.name ORDER BY t.name SEPARATOR ', ') " +
-                            "         FROM ( " +
-                            "           SELECT DISTINCT g.name AS name " +
-                            "           FROM genres_in_movies gim " +
-                            "           JOIN genres g ON g.id = gim.genreId " +
-                            "           WHERE gim.movieId = m.id " +
-                            "           ORDER BY g.name " +
-                            "           LIMIT 3 " +
-                            "         ) AS t " +
-                            "       ) AS genres, " +
+                            " ( " +
+                            "   SELECT GROUP_CONCAT(t.name ORDER BY t.name SEPARATOR ', ') " +
+                            "   FROM ( " +
+                            "     SELECT DISTINCT g.name AS name " +
+                            "     FROM genres_in_movies gim " +
+                            "     JOIN genres g ON g.id = gim.genreId " +
+                            "     WHERE gim.movieId = m.id " +
+                            "     ORDER BY g.name " +
+                            "     LIMIT 3 " +
+                            "   ) AS t " +
+                            " ) AS genres, " +
 
                             // First three stars of movie
-                            "         SELECT GROUP_CONCAT(t2.name ORDER BY t2.name SEPARATOR ', ') " +
-                            "         FROM ( " +
-                            "           SELECT DISTINCT s.name AS name " +
-                            "           FROM stars_in_movies sim " +
-                            "           JOIN stars s ON s.id = sim.starId " +
-                            "           WHERE sim.movieId = m.id " +
-                            "           ORDER BY s.name " +
-                            "           LIMIT 3 " +
-                            "         ) AS t2 " +
-                            "       ) AS stars " +
+                            " ( " +
+                            "   SELECT GROUP_CONCAT(t2.name ORDER BY t2.name SEPARATOR ', ') " +
+                            "   FROM ( " +
+                            "     SELECT DISTINCT s.name AS name " +
+                            "     FROM stars_in_movies sim " +
+                            "     JOIN stars s ON s.id = sim.starId " +
+                            "     WHERE sim.movieId = m.id " +
+                            "     ORDER BY s.name " +
+                            "     LIMIT 3 " +
+                            "   ) AS t2 " +
+                            " ) AS stars " +
 
                             "FROM movies m " +
+                            // Add rating to query
+                            "LEFT JOIN ratings r ON r.movieId = m.id " +
                             "LIMIT 20";
 
             ResultSet resultSet = statement.executeQuery(query);
@@ -67,6 +70,7 @@ public class MovielistServlet extends HttpServlet {
             out.println("<th>Director</th>");
             out.println("<th>3 Genres</th>");
             out.println("<th>3 Stars</th>");
+            out.println("<th>Rating</th>");
             out.println("</tr>");
 
             while (resultSet.next()) {
@@ -77,6 +81,13 @@ public class MovielistServlet extends HttpServlet {
                 String genres = resultSet.getString("genres");
                 String stars = resultSet.getString("stars");
 
+                // Set values to N/A if there is no value
+                if (genres == null || genres.trim().isEmpty()) genres = "N/A";
+                if (stars == null || stars.trim().isEmpty()) stars = "N/A";
+                Float ratingObj = (Float)resultSet.getObject("rating");
+                // Return N/A if there is no rating
+                String rating = (ratingObj == null) ? "N/A" : String.valueOf(ratingObj);
+
                 // Make the Movie names a hyperlink
                 out.println("<tr>");
                 out.println("<td><a href='single-movie?id=" + escapeHtml(movieId) + "'>"
@@ -85,6 +96,7 @@ public class MovielistServlet extends HttpServlet {
                 out.println("<td>" + escapeHtml(director) + "</td>");
                 out.println("<td>" + escapeHtml(genres) + "</td>");
                 out.println("<td>" + escapeHtml(stars) + "</td>");
+                out.println("<td>" + escapeHtml(rating) + "</td>");
                 out.println("</tr>");
             }
 
