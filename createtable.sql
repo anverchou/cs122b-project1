@@ -1,3 +1,5 @@
+CREATE DATABASE moviedb;
+
 CREATE TABLE IF NOT EXISTS movies(
 	id varchar(10) primary key,
     title varchar(100) not null,
