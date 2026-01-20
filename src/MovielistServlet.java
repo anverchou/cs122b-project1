@@ -103,6 +103,8 @@ public class MovielistServlet extends HttpServlet {
                             "FROM movies m " +
                             // Add rating to query
                             "LEFT JOIN ratings r ON r.movieId = m.id " +
+                            // Sort list by ratings
+                            "ORDER BY (r.rating is NULL) ASC, r.rating DESC, m.title ASC " +
                             "LIMIT 20";
 
             ResultSet resultSet = statement.executeQuery(query);
