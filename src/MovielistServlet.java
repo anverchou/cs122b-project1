@@ -11,13 +11,60 @@ import java.sql.*;
 public class MovielistServlet extends HttpServlet {
 
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws IOException {
-        String loginUser = "root";
-        String loginPasswd = "Teehee1324!";
+        String loginUser = "testuser";
+        String loginPasswd = "password";
         String loginUrl = "jdbc:mysql://localhost:3306/moviedb";
 
+        // Header Text
         response.setContentType("text/html");
         PrintWriter out = response.getWriter();
-        out.println("<html><head><title>Fabflix</title></head>");
+        out.println("<!doctype html>");
+        out.println("<html lang='en'>");
+        out.println("<head>");
+        out.println("<meta charset='utf-8'>");
+        out.println("<meta name='viewport' content='width=device-width, initial-scale=1'>");
+        out.println("<title>Fabflix - Movie List</title>");
+        out.println("<style>");
+
+        // Theme of the page
+        out.println("  :root { --bg:#0b1220; --card:#0f172a; --text:#e5e7eb; --muted:#9ca3af; --border:#1f2937; --link:#60a5fa; --linkhover:#93c5fd; }");
+
+        // Styling of page
+        out.println("  body { margin:0; font-family: system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif; background: linear-gradient(180deg, #070b14, #0b1220); color: var(--text); }");
+
+        // Center container
+        out.println("  .container { max-width: 1100px; margin: 40px auto; padding: 0 16px; }");
+
+        // Header row
+        out.println("  .header { display:flex; align-items:flex-end; justify-content:space-between; gap:12px; margin-bottom:16px; }");
+
+        // Title page
+        out.println("  h1 { margin:0; font-size: 28px; letter-spacing: .2px; }");
+
+        // Card container
+        out.println("  .card { background: rgba(15, 23, 42, 0.75); border: 1px solid var(--border); border-radius: 14px; overflow:hidden; box-shadow: 0 12px 30px rgba(0,0,0,.35); }");
+
+        // Table
+        out.println("  table { width:100%; border-collapse: collapse; }");
+
+        // Cell padding and borders
+        out.println("  th, td { padding: 12px 12px; border-bottom: 1px solid var(--border); vertical-align: top; }");
+
+        // Header cell styling
+        out.println("  th { text-align:left; font-size: 12px; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); background: rgba(255,255,255,.02); }");
+
+        // Zebra striping
+        out.println("  tr:nth-child(even) td { background: rgba(255,255,255,.015); }");
+
+        // Hover row highlight
+        out.println("  tr:hover td { background: rgba(96,165,250,.06); }");
+
+        // Link styling
+        out.println("  a { color: var(--link); text-decoration: none; }");
+        out.println("  a:hover { color: var(--linkhover); text-decoration: underline; }");
+        out.println("  .nowrap { white-space: nowrap; }");
+        out.println("</style>");
+        out.println("</head>");
 
         try {
             Class.forName("com.mysql.cj.jdbc.Driver");
@@ -60,18 +107,29 @@ public class MovielistServlet extends HttpServlet {
 
             ResultSet resultSet = statement.executeQuery(query);
 
+            // Body Text
             out.println("<body>");
-            out.println("<h1>Movie List</h1>");
-            out.println("<table border='1'>");
+            out.println("  <div class='container'>");
+            out.println("    <div class='header'>");
+            out.println("      <div>");
+            out.println("        <h1>Top 20 Movie List</h1>");
+            out.println("      </div>");
+            out.println("    </div>");
 
-            out.println("<tr>");
-            out.println("<th>Title</th>");
-            out.println("<th>Year</th>");
-            out.println("<th>Director</th>");
-            out.println("<th>3 Genres</th>");
-            out.println("<th>3 Stars</th>");
-            out.println("<th>Rating</th>");
-            out.println("</tr>");
+            out.println("    <div class='card'>");
+
+            out.println("      <table>");
+            out.println("        <thead>");
+            out.println("          <tr>");
+            out.println("            <th style='width:22%'>Title</th>");
+            out.println("            <th class='nowrap' style='width:8%'>Year</th>");
+            out.println("            <th style='width:18%'>Director</th>");
+            out.println("            <th style='width:24%'>Genres</th>");
+            out.println("            <th style='width:20%'>Stars</th>");
+            out.println("            <th class='nowrap' style='width:8%'>Rating</th>");
+            out.println("          </tr>");
+            out.println("        </thead>");
+            out.println("        <tbody>");
 
             while (resultSet.next()) {
                 String movieId = resultSet.getString("id");
@@ -113,12 +171,13 @@ public class MovielistServlet extends HttpServlet {
                     }
                 }
                 out.println("</td>");
-
                 out.println("<td>" + escapeHtml(rating) + "</td>");
                 out.println("</tr>");
             }
-
-            out.println("</table>");
+            out.println("        </tbody>");
+            out.println("      </table>");
+            out.println("    </div>");
+            out.println("  </div>");
             out.println("</body>");
 
             resultSet.close();
