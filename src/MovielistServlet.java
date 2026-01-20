@@ -11,7 +11,7 @@ import java.sql.*;
 public class MovielistServlet extends HttpServlet {
 
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws IOException {
-        String loginUser = "mytestuser";
+        String loginUser = "testuser";
         String loginPasswd = "password";
         String loginUrl = "jdbc:mysql://localhost:3306/moviedb";
 
