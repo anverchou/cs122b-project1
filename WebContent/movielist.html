@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Fabflix - Movie List</title>
+    <style>
+        :root { --bg:#0b1220; --card:#0f172a; --text:#e5e7eb; --muted:#9ca3af; --border:#1f2937; --link:#60a5fa; --linkhover:#93c5fd; }
+        body { margin:0; font-family: system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif; background: linear-gradient(180deg, #070b14, #0b1220); color: var(--text); }
+        .container { max-width: 1100px; margin: 40px auto; padding: 0 16px; }
+        .header { display:flex; align-items:flex-end; justify-content:space-between; gap:12px; margin-bottom:16px; }
+        h1 { margin:0; font-size: 28px; letter-spacing: .2px; }
+        .card { background: rgba(15, 23, 42, 0.75); border: 1px solid var(--border); border-radius: 14px; overflow:hidden; box-shadow: 0 12px 30px rgba(0,0,0,.35); }
+        .status { color: var(--muted); padding: 12px; }
+        table { width:100%; border-collapse: collapse; }
+        th, td { padding: 12px 12px; border-bottom: 1px solid var(--border); vertical-align: top; }
+        th { text-align:left; font-size: 12px; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); background: rgba(255,255,255,.02); }
+        tr:nth-child(even) td { background: rgba(255,255,255,.015); }
+        tr:hover td { background: rgba(96,165,250,.06); }
+        a { color: var(--link); text-decoration: none; }
+        a:hover { color: var(--linkhover); text-decoration: underline; }
+        .nowrap { white-space: nowrap; }
+    </style>
+
+</head>
+
+<body>
+<div class="container">
+    <div class="header">
+        <div>
+            <h1>Top 20 Movies List</h1>
+        </div>
+    </div>
+
+    <div class="card">
+        <div id="status" class="status">Loading…</div>
+
+        <table>
+            <thead>
+            <tr>
+                <th style="width:22%">Title</th>
+                <th class="nowrap" style="width:8%">Year</th>
+                <th style="width:18%">Director</th>
+                <th style="width:24%">Genres</th>
+                <th style="width:20%">Stars</th>
+                <th class="nowrap" style="width:8%">Rating</th>
+            </tr>
+            </thead>
+            <tbody id="movie_table_body"></tbody>
+        </table>
+    </div>
+</div>
+
+<script src="movielist.js"></script>
+</body>
+</html>
