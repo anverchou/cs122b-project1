@@ -7,142 +7,171 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.sql.*;
 
+/**
+ * Returns detailed information for a single movie as JSON, including:
+ *   - core movie fields (id, title, year, director)
+ *   - rating (nullable)
+ *   - all genres (comma-separated string)
+ * all stars (comma-separated "id:name" pairs)
+ */
 @WebServlet("/singlemovie")
 public class SingleMovieServlet extends HttpServlet {
-
+     /* 1) Read movieId from query param
+      * 2) Validate it exists
+      * 3) Query movie core info + rating
+      * 4) Query all genres
+      * 5) Query all stars
+      * 6) Write final JSON object
+      */
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws IOException {
-        String loginUser = "mytestuser";
-        String loginPasswd = "password";
+        String loginUser = "root";
+        String loginPasswd = "Teehee1324!";
         String loginUrl = "jdbc:mysql://localhost:3306/moviedb";
 
-        response.setContentType("text/html");
+        response.setContentType("application/json");
+        response.setCharacterEncoding("UTF-8");
         PrintWriter out = response.getWriter();
-
-        // Accept both id and movieId
+        // Rad and valid
         String movieId = request.getParameter("id");
         if (movieId == null || movieId.trim().isEmpty()) {
             movieId = request.getParameter("movieId");
         }
-
-        out.println("<html><head><title>Single Movie</title></head><body>");
-        // Return to movielist button
-        out.println("<a href='movielist'>Back to Movie List</a><br/><br/>");
+        // Retur 400 is missing
+        if (movieId == null || movieId.trim().isEmpty()) {
+            response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+            out.print("{\"error\":\"Missing movie id (expected ?id=...)\"}");
+            out.close();
+            return;
+        }
 
         try {
             Class.forName("com.mysql.cj.jdbc.Driver");
-            Connection connection = DriverManager.getConnection(loginUrl, loginUser, loginPasswd);
 
-            // Movie info + rating
-            String movieQuery =
-                    "SELECT m.title, m.year, m.director, r.rating " +
-                            "FROM movies m " +
-                            "LEFT JOIN ratings r ON r.movieId = m.id " +
-                            "WHERE m.id = ?";
+            try (Connection connection = DriverManager.getConnection(loginUrl, loginUser, loginPasswd)) {
 
-            String title = null;
-            Integer year = null;
-            String director = null;
-            Float rating = null;
+                // 1) Movie core info + rating
+                String movieQuery =
+                        "SELECT m.id, m.title, m.year, m.director, r.rating " +
+                                "FROM movies m " +
+                                "LEFT JOIN ratings r ON r.movieId = m.id " +
+                                "WHERE m.id = ?";
 
-            try (PreparedStatement ps = connection.prepareStatement(movieQuery)) {
-                ps.setString(1, movieId);
-                try (ResultSet rs = ps.executeQuery()) {
-                    if (rs.next()) {
+                String title;
+                Integer year;
+                String director;
+                Double rating;
+
+                try (PreparedStatement ps = connection.prepareStatement(movieQuery)) {
+                    ps.setString(1, movieId);
+                    try (ResultSet rs = ps.executeQuery()) {
+                        if (!rs.next()) {
+                            // Movie id is not found
+                            response.setStatus(HttpServletResponse.SC_NOT_FOUND);
+                            out.print("{\"error\":\"Movie not found\"}");
+                            return;
+                        }
                         title = rs.getString("title");
                         year = (Integer) rs.getObject("year");
                         director = rs.getString("director");
-                        rating = (Float) rs.getObject("rating"); // can be null
+                        Number r = (Number) rs.getObject("rating");
+                        rating = (r == null) ? null : r.doubleValue();
                     }
                 }
-            }
 
-            // Print out required information
-            out.println("<h1>Movie: " + escapeHtml(title) + "</h1>");
-            out.println("<p><b>Year:</b> " + year + "</p>");
-            out.println("<p><b>Director:</b> " + escapeHtml(director) + "</p>");
-            out.println("<p><b>Rating:</b> " + (rating == null ? "N/A" : rating) + "</p>");
+                // 2) All genres
+                String genresQuery =
+                        "SELECT DISTINCT g.name " +
+                                "FROM genres_in_movies gim " +
+                                "JOIN genres g ON g.id = gim.genreId " +
+                                "WHERE gim.movieId = ? " +
+                                "ORDER BY g.name";
 
-            // All genres
-            out.println("<h2>Genres</h2>");
-            // Print into a list
-            out.println("<ul>");
-
-            // Genres query
-            String genresQuery =
-                    "SELECT g.name " +
-                            "FROM genres_in_movies gim " +
-                            "JOIN genres g ON g.id = gim.genreId " +
-                            "WHERE gim.movieId = ? " +
-                            "ORDER BY g.name";
-
-            // Check if genres exist
-            boolean anyGenre = false;
-            try (PreparedStatement ps = connection.prepareStatement(genresQuery)) {
-                ps.setString(1, movieId);
-                try (ResultSet rs = ps.executeQuery()) {
-                    while (rs.next()) {
-                        anyGenre = true;
-                        out.println("<li>" + escapeHtml(rs.getString("name")) + "</li>");
+                StringBuilder genresSb = new StringBuilder();
+                try (PreparedStatement ps = connection.prepareStatement(genresQuery)) {
+                    ps.setString(1, movieId);
+                    try (ResultSet rs = ps.executeQuery()) {
+                        boolean first = true;
+                        while (rs.next()) {
+                            if (!first) genresSb.append(", ");
+                            first = false;
+                            genresSb.append(rs.getString("name"));
+                        }
                     }
                 }
-            }
+                String genres = genresSb.length() == 0 ? "N/A" : genresSb.toString();
 
-            // Print depending if at least one genre exists or not
-            if (!anyGenre) out.println("<li>N/A</li>");
-            out.println("</ul>");
+                // 3) All stars as
+                String starsQuery =
+                        "SELECT DISTINCT s.id, s.name " +
+                                "FROM stars_in_movies sim " +
+                                "JOIN stars s ON s.id = sim.starId " +
+                                "WHERE sim.movieId = ? " +
+                                "ORDER BY s.name";
 
-            // Print stars that are connected with the movie
-            out.println("<h2>Stars</h2>");
-            out.println("<ul>");
-
-            // Stars query
-            String starsQuery =
-                    "SELECT s.id, s.name " +
-                            "FROM stars_in_movies sim " +
-                            "JOIN stars s ON s.id = sim.starId " +
-                            "WHERE sim.movieId = ? " +
-                            "ORDER BY s.name";
-
-            // Check if stars exist
-            boolean anyStar = false;
-
-            try (PreparedStatement ps = connection.prepareStatement(starsQuery)) {
-                ps.setString(1, movieId);
-                try (ResultSet rs = ps.executeQuery()) {
-                    while (rs.next()) {
-                        anyStar = true;
-                        String starId = rs.getString("id");
-                        String starName = rs.getString("name");
-
-                        out.println("<li><a href='singlestar?id=" + escapeHtml(starId) + "'>"
-                                + escapeHtml(starName) + "</a></li>");
+                StringBuilder starsSb = new StringBuilder();
+                try (PreparedStatement ps = connection.prepareStatement(starsQuery)) {
+                    ps.setString(1, movieId);
+                    try (ResultSet rs = ps.executeQuery()) {
+                        boolean first = true;
+                        while (rs.next()) {
+                            if (!first) starsSb.append(", ");
+                            first = false;
+                            String sid = rs.getString("id");
+                            String sname = rs.getString("name");
+                            starsSb.append(sid).append(":").append(sname);
+                        }
                     }
                 }
+                String stars = starsSb.length() == 0 ? "N/A" : starsSb.toString();
+
+                // 4) JSON response
+                out.print("{");
+                out.print("\"id\":\"" + escapeJson(movieId) + "\",");
+                out.print("\"title\":\"" + escapeJson(title) + "\",");
+
+                // year number or null
+                out.print("\"year\":" + (year == null ? "null" : year) + ",");
+
+                out.print("\"director\":\"" + escapeJson(director) + "\",");
+
+                out.print("\"genres\":\"" + escapeJson(genres) + "\",");
+                out.print("\"stars\":\"" + escapeJson(stars) + "\",");
+
+                // rating number or null
+                out.print("\"rating\":" + (rating == null ? "null" : rating));
+
+                out.print("}");
             }
 
-            // Print out stars that correspond to the movie
-            if (!anyStar) {
-                out.println("<li>N/A</li>");
-            }
-            out.println("</ul>");
-            connection.close();
-
+            // Debugging
         } catch (Exception e) {
-            request.getServletContext().log("Error: ", e);
-            out.println("<p>Exception in doGet: " + escapeHtml(e.getMessage()) + "</p>");
+            request.getServletContext().log("SingleMovieServlet error: ", e);
+            response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+            out.print("{\"error\":\"Exception in doGet: " + escapeJson(e.getMessage()) + "\"}");
+        } finally {
+            out.close();
         }
-
-        out.println("</body></html>");
-        out.close();
     }
 
-    // HTML injection from Movielist
-    private static String escapeHtml(String s) {
+    private static String escapeJson(String s) {
         if (s == null) return "";
-        return s.replace("&", "&amp;")
-                .replace("<", "&lt;")
-                .replace(">", "&gt;")
-                .replace("\"", "&quot;");
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < s.length(); i++) {
+            char c = s.charAt(i);
+            switch (c) {
+                case '\\': sb.append("\\\\"); break;
+                case '"':  sb.append("\\\""); break;
+                case '\b': sb.append("\\b"); break;
+                case '\f': sb.append("\\f"); break;
+                case '\n': sb.append("\\n"); break;
+                case '\r': sb.append("\\r"); break;
+                case '\t': sb.append("\\t"); break;
+                default:
+                    if (c < 0x20) sb.append(String.format("\\u%04x", (int) c));
+                    else sb.append(c);
+            }
+        }
+        return sb.toString();
     }
 }

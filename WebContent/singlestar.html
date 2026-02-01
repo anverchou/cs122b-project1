@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Fabflix - Movie List</title>
+    <title>Fabflix - Single Star</title>
 
     <style>
         :root{
@@ -30,7 +30,7 @@
         }
 
         .container{
-            max-width:1100px;
+            max-width:900px;
             margin:32px auto;
             padding:0 16px;
         }
@@ -59,13 +59,25 @@
             background:var(--panel);
         }
 
-        .header{
+        .topbar{
             display:flex;
-            align-items:flex-end;
             justify-content:space-between;
+            align-items:center;
             gap:12px;
             margin-bottom:14px;
         }
+        .back a{
+            color:var(--text);
+            text-decoration:none;
+            font-weight:600;
+        }
+        .back a:hover{
+            color:var(--text);
+            text-decoration:underline;
+        }
+
+        .content{ padding:16px; }
+
         h1{
             margin:0;
             font-size:28px;
@@ -73,56 +85,86 @@
             letter-spacing:-0.02em;
         }
 
-        table{
-            width:100%;
-            border-collapse:collapse;
+        .meta{
+            display:grid;
+            grid-template-columns: 1fr;
+            gap:10px;
+            margin-top:10px;
         }
 
-        th, td{
-            padding:14px 16px;
-            border-bottom:1px solid var(--border);
-            vertical-align:top;
-        }
-
-        th{
-            text-align:left;
-            font-size:12px;
-            font-weight:700;
-            text-transform:uppercase;
-            letter-spacing:.08em;
-            color:var(--muted);
+        .meta div{
+            padding:12px 14px;
+            border:1px solid var(--border);
+            border-radius:14px;
             background:var(--panel);
         }
 
-        tr:hover td{
-            background:var(--subtle);
+        .label{
+            color:var(--muted);
+            font-size:12px;
+            text-transform:uppercase;
+            letter-spacing:.08em;
+            margin-bottom:4px;
+            font-weight:700;
         }
 
-        .nowrap{ white-space:nowrap; }
+        .value{
+            font-size:15px;
+            color:var(--text);
+        }
 
-        .btn{
-            padding:10px 14px;
+        .section{ margin-top:16px; }
+
+        .section h2{
+            margin:0 0 10px;
+            font-size:14px;
+            color:var(--muted);
+            text-transform:uppercase;
+            letter-spacing:.08em;
+            font-weight:800;
+        }
+
+        .chips{
+            display:flex;
+            flex-wrap:wrap;
+            gap:10px;
+        }
+
+        .chip{
+            display:inline-flex;
+            align-items:center;
+            padding:8px 12px;
             border:1px solid var(--border);
             border-radius:999px;
             background:var(--panel);
-            cursor:pointer;
-            font-weight:700;
-            display:inline-flex;
-            align-items:center;
-            gap:8px;
-            white-space:nowrap;
+            font-size:14px;
+            color:var(--text);
         }
 
-        a.btn{
+        a.chip{
             color:var(--text);
             text-decoration:none;
         }
-
-        a.btn:hover{
+        a.chip:hover{
             background:var(--subtle);
             border-color:var(--accent);
             color:var(--accentHover);
             text-decoration:none;
+        }
+
+        .info-pill{
+            display:inline-flex;
+            align-items:center;
+            padding:10px 14px;
+            border:1px solid var(--border);
+            border-radius:999px;
+            background:var(--panel);
+            color:var(--text);
+            font-size:14px;
+            white-space:nowrap;
+            max-width:100%;
+            overflow:hidden;
+            text-overflow:ellipsis;
         }
 
     </style>
@@ -130,34 +172,28 @@
 
 <body>
 <div class="container">
-    <div class="header">
-        <div>
-            <h1>Top 20 Movies</h1>
+    <div class="topbar">
+        <div class="back"><a href="movielist.html">← Back to Movie List</a></div>
     </div>
-
-    <a class="btn" href="main.html">← Back to Search</a>
-</div>
-
 
     <div class="card">
         <div id="status" class="status">Loading…</div>
 
-        <table>
-            <thead>
-            <tr>
-                <th style="width:22%">Title</th>
-                <th class="nowrap" style="width:8%">Year</th>
-                <th style="width:18%">Director</th>
-                <th style="width:24%">Genres</th>
-                <th style="width:20%">Stars</th>
-                <th class="nowrap" style="width:8%">Rating</th>
-            </tr>
-            </thead>
-            <tbody id="movie_table_body"></tbody>
-        </table>
+        <div class="content">
+            <h1 id="star_name">Star</h1>
+
+            <div style="margin-top:12px;">
+                <div class="info-pill" id="star_info_pill">Loading…</div>
+            </div>
+
+            <div class="section">
+                <h2>Movies</h2>
+                <div class="chips" id="movie_chips"></div>
+            </div>
+        </div>
     </div>
 </div>
 
-<script src="movielist.js?v=3"></script>
+<script src="singlestar.js?v=3"></script>
 </body>
 </html>

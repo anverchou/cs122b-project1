@@ -7,93 +7,123 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.sql.*;
 
+// Return information for each single star
 @WebServlet("/singlestar")
 public class SingleStarServlet extends HttpServlet {
-
+    /* 1) Read starId from query param
+       * 2) Validate it exists
+       * 3) Query star core info
+       * 4) Query movies the star appeared
+       * 5) Write final JSON
+    */
+    @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws IOException {
-        String loginUser = "mytestuser";
-        String loginPasswd = "password";
+        String loginUser = "root";
+        String loginPasswd = "Teehee1324!";
         String loginUrl = "jdbc:mysql://localhost:3306/moviedb";
 
-        response.setContentType("text/html");
+        response.setContentType("application/json");
+        response.setCharacterEncoding("UTF-8");
         PrintWriter out = response.getWriter();
 
+        // Read and validate
         String starId = request.getParameter("id");
-
-        // Return to Movie List button
-        out.println("<html><head><title>Single Star</title></head><body>");
-        out.println("<a href='movielist'>Back to Movie List</a><br/><br/>");
+        if (starId == null || starId.trim().isEmpty()) {
+            response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+            out.print("{\"error\":\"Missing star id (expected ?id=...)\"}");
+            out.close();
+            return;
+        }
 
         try {
             Class.forName("com.mysql.cj.jdbc.Driver");
-            Connection connection = DriverManager.getConnection(loginUrl, loginUser, loginPasswd);
 
-            // Get star info
-            String starQuery = "SELECT name, birthYear FROM stars WHERE id = ?";
-            // Set values to null first
-            String name = null;
-            Integer birthYear = null;
+            try (Connection connection = DriverManager.getConnection(loginUrl, loginUser, loginPasswd)) {
 
-            try (PreparedStatement ps = connection.prepareStatement(starQuery)) {
-                ps.setString(1, starId);
-                try (ResultSet rs = ps.executeQuery()) {
-                    if (rs.next()) {
+                // 1) Star info
+                String starQuery = "SELECT id, name, birthYear FROM stars WHERE id = ?";
+
+                String name;
+                Integer birthYear;
+
+                try (PreparedStatement ps = connection.prepareStatement(starQuery)) {
+                    ps.setString(1, starId);
+                    try (ResultSet rs = ps.executeQuery()) {
+                        if (!rs.next()) {
+                            response.setStatus(HttpServletResponse.SC_NOT_FOUND);
+                            out.print("{\"error\":\"Star not found\"}");
+                            return;
+                        }
                         name = rs.getString("name");
                         birthYear = (Integer) rs.getObject("birthYear"); // may be null
                     }
                 }
-            }
 
-            // Display the actor's information
-            out.println("<h1>" + escapeHtml(name) + "</h1>");
-            // Display birthYear or N/A if not applicable
-            out.println("<p><b>Year of Birth:</b> " + (birthYear == null ? "N/A" : birthYear) + "</p>");
+                // 2) Movies the star acted in
+                String moviesQuery =
+                        "SELECT DISTINCT m.id, m.title " +
+                                "FROM stars_in_movies sim " +
+                                "JOIN movies m ON m.id = sim.movieId " +
+                                "WHERE sim.starId = ? " +
+                                "ORDER BY m.title";
 
-            // Display all movies the actor has starred in
-            out.println("<h2>Movies</h2>");
-            out.println("<ul>");
-
-            String moviesQuery =
-                    "SELECT m.id, m.title, m.year " +
-                            "FROM stars_in_movies sim " +
-                            "JOIN movies m ON m.id = sim.movieId " +
-                            "WHERE sim.starId = ? " +
-                            "ORDER BY m.title";
-
-            boolean anyMovie = false;
-            try (PreparedStatement ps = connection.prepareStatement(moviesQuery)) {
-                ps.setString(1, starId);
-                try (ResultSet rs = ps.executeQuery()) {
-                    while (rs.next()) {
-                        anyMovie = true;
-                        String movieId = rs.getString("id");
-                        String title = rs.getString("title");
-                        out.println("<li><a href='singlemovie?id=" + escapeHtml(movieId) + "'>"
-                                + escapeHtml(title) + "</a></li>");
+                StringBuilder moviesSb = new StringBuilder();
+                try (PreparedStatement ps = connection.prepareStatement(moviesQuery)) {
+                    ps.setString(1, starId);
+                    try (ResultSet rs = ps.executeQuery()) {
+                        boolean first = true;
+                        while (rs.next()) {
+                            if (!first) moviesSb.append(", ");
+                            first = false;
+                            String mid = rs.getString("id");
+                            String title = rs.getString("title");
+                            moviesSb.append(mid).append(":").append(title);
+                        }
                     }
                 }
+
+                String movies = moviesSb.length() == 0 ? "N/A" : moviesSb.toString();
+
+                // 3) JSON response
+                out.print("{");
+                out.print("\"id\":\"" + escapeJson(starId) + "\",");
+                out.print("\"name\":\"" + escapeJson(name) + "\",");
+
+                // birthYear should be avnumber or null
+                out.print("\"birthYear\":" + (birthYear == null ? "null" : birthYear) + ",");
+
+                out.print("\"movies\":\"" + escapeJson(movies) + "\"");
+                out.print("}");
             }
 
-            // Return list of movies the actor has starred in or N/A
-            if (!anyMovie) out.println("<li>N/A</li>");
-            out.println("</ul>");
-
-            connection.close();
-
+            // Debugging
         } catch (Exception e) {
-            request.getServletContext().log("Error: ", e);
-            out.println("<p>Exception: " + escapeHtml(e.getMessage()) + "</p>");
+            request.getServletContext().log("SingleStarServlet error: ", e);
+            response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+            out.print("{\"error\":\"Exception in doGet: " + escapeJson(e.getMessage()) + "\"}");
+        } finally {
+            out.close();
         }
-
-        out.println("</body></html>");
-        out.close();
     }
 
-    private static String escapeHtml(String s) {
+    private static String escapeJson(String s) {
         if (s == null) return "";
-        return s.replace("&", "&amp;")
-                .replace("<", "&lt;")
-                .replace(">", "&gt;")
-                .replace("\"", "&quot;");
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < s.length(); i++) {
+            char c = s.charAt(i);
+            switch (c) {
+                case '\\': sb.append("\\\\"); break;
+                case '"':  sb.append("\\\""); break;
+                case '\b': sb.append("\\b"); break;
+                case '\f': sb.append("\\f"); break;
+                case '\n': sb.append("\\n"); break;
+                case '\r': sb.append("\\r"); break;
+                case '\t': sb.append("\\t"); break;
+                default:
+                    if (c < 0x20) sb.append(String.format("\\u%04x", (int) c));
+                    else sb.append(c);
+            }
+        }
+        return sb.toString();
     }
 }

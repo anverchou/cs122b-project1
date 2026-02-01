@@ -1,0 +1,186 @@
+<style>
+    :root{
+        --bg:#ffffff;
+        --panel:#ffffff;
+        --subtle:#f7f7f7;
+        --text:#222222;
+        --muted:#717171;
+        --border:#dddddd;
+        --accent:#5f64ef;
+        --accentHover:#1351dc;
+        --shadow:0 6px 18px rgba(0,0,0,.12);
+        --shadowSoft:0 1px 2px rgba(0,0,0,.08);
+        --radius:18px;
+    }
+
+    *{ box-sizing:border-box; }
+
+    body{
+        margin:0;
+        font-family: system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
+        background:var(--bg);
+        color:var(--text);
+    }
+
+    .container{
+        max-width:900px;
+        margin:32px auto;
+        padding:0 16px;
+    }
+
+    a{
+        color:var(--accent);
+        text-decoration:none;
+    }
+    a:hover{
+        color:var(--accentHover);
+        text-decoration:underline;
+    }
+
+    .topbar{
+        display:flex;
+        justify-content:space-between;
+        align-items:center;
+        gap:12px;
+        margin-bottom:14px;
+    }
+
+    h1{
+        margin:0;
+        font-size:28px;
+        font-weight:700;
+        letter-spacing:-0.02em;
+    }
+
+    .card{
+        background:var(--panel);
+        border:1px solid var(--border);
+        border-radius:var(--radius);
+        overflow:hidden;
+        box-shadow:var(--shadowSoft);
+        padding:16px;
+    }
+
+    .section{ margin-top:16px; }
+
+    .section h2{
+        margin:0 0 10px;
+        font-size:14px;
+        color:var(--muted);
+        text-transform:uppercase;
+        letter-spacing:.08em;
+        font-weight:800;
+    }
+
+    .grid{
+        display:grid;
+        grid-template-columns: 1fr 1fr;
+        gap:10px 16px;
+        margin-top:10px;
+    }
+
+    .field label{
+        display:block;
+        color:var(--muted);
+        font-size:12px;
+        text-transform:uppercase;
+        letter-spacing:.08em;
+        margin-bottom:6px;
+        font-weight:700;
+    }
+
+    .field input{
+        width:100%;
+        padding:10px 12px;
+        border:1px solid var(--border);
+        border-radius:14px;
+        background:var(--panel);
+        font-size:14px;
+        outline:none;
+    }
+
+    .field input:focus{
+        border-color:var(--accent);
+        box-shadow:0 0 0 3px rgba(95,100,239,.15);
+    }
+
+    .actions{
+        margin-top:12px;
+        display:flex;
+        gap:10px;
+        align-items:center;
+        flex-wrap:wrap;
+    }
+
+    .btn{
+        display:inline-flex;
+        align-items:center;
+        padding:10px 14px;
+        border:1px solid var(--border);
+        border-radius:999px;
+        background:var(--panel);
+        cursor:pointer;
+        font-weight:700;
+        color:var(--text);
+        text-decoration:none;
+        white-space:nowrap;
+    }
+
+    .btn:hover{
+        background:var(--subtle);
+        border-color:var(--accent);
+        color:var(--accentHover);
+        text-decoration:none;
+    }
+
+    .btn.primary{
+        background:var(--accent);
+        border-color:var(--accent);
+        color:#fff;
+    }
+    .btn.primary:hover{
+        background:var(--accentHover);
+        border-color:var(--accentHover);
+        color:#fff;
+    }
+
+    .chips{
+        display:flex;
+        flex-wrap:wrap;
+        gap:10px;
+    }
+
+    .chip{
+        display:inline-flex;
+        align-items:center;
+        padding:8px 12px;
+        border:1px solid var(--border);
+        border-radius:999px;
+        background:var(--panel);
+        font-size:14px;
+        color:var(--text);
+        text-decoration:none;
+    }
+
+    a.chip{
+        color:var(--text);
+        text-decoration:none;
+    }
+    a.chip:hover{
+        background:var(--subtle);
+        border-color:var(--accent);
+        color:var(--accentHover);
+        text-decoration:none;
+    }
+
+    .hint{
+        color:var(--muted);
+        font-size:13px;
+        margin-top:8px;
+    }
+
+    @media (max-width: 720px){
+        .grid{ grid-template-columns: 1fr; }
+        .topbar{ align-items:flex-start; flex-direction:column; }
+    }
+</style>
