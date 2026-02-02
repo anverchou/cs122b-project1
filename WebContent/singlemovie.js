@@ -9,6 +9,13 @@ function esc(s) {
         .replaceAll('"', "&quot;");
 }
 
+// Get context path for clicked movie
+function getContextPath() {
+    const path = window.location.pathname;
+    const i = path.indexOf("/", 1);
+    return i === -1 ? "" : path.substring(0, i);
+}
+
 // Read movieid from page url query
 function getMovieIdFromURL() {
     const params = new URLSearchParams(window.location.search);
@@ -29,6 +36,28 @@ function formatRating(r) {
     return Number.isFinite(n) ? n.toFixed(1) : "N/A";
 }
 
+// Clear searches/filters when back to movielist is clicked
+async function setBackLinkFromSession() {
+    const a = document.querySelector(".back a");
+    if (!a) return;
+
+    try {
+        const res = await fetch(`${getContextPath()}/api/movielist-state`, {
+            headers: { "Accept": "application/json" }
+        });
+
+        if (res.status === 401) {
+            window.location.replace("login.html");
+            return;
+        }
+
+        if (!res.ok) return;
+
+        const data = await res.json();
+        if (data && data.url) a.href = data.url;
+    } catch (_) {}
+}
+
 // Render genres into containers
 function renderGenres(genresField) {
     const wrap = document.getElementById("genre_chips");
@@ -44,7 +73,21 @@ function renderGenres(genresField) {
         return;
     }
 
-    arr.forEach(g => wrap.insertAdjacentHTML("beforeend", `<span class="chip">${esc(g)}</span>`));
+    // Get genres types
+    arr.forEach(g => {
+        const raw = String(g);
+        if (raw.includes(":")) {
+            const [id, name] = raw.split(":", 2);
+            const gid = (id ?? "").trim();
+            const gname = (name ?? id ?? "").trim();
+            wrap.insertAdjacentHTML(
+                "beforeend",
+                `<a class="chip" href="movielist.html?genreId=${encodeURIComponent(gid)}">${esc(gname)}</a>`
+            );
+        } else {
+            wrap.insertAdjacentHTML("beforeend", `<span class="chip">${esc(raw)}</span>`);
+        }
+    });
 }
 
 // Render stars into containers
@@ -105,7 +148,7 @@ async function loadSingleMovie() {
     }
 
     try {
-        const res = await fetch(`${API_URL}?id=${encodeURIComponent(movieId)}`, {
+        const res = await fetch(`${getContextPath()}/${API_URL}?id=${encodeURIComponent(movieId)}`, {
             headers: { "Accept": "application/json" }
         });
         if (res.status === 401) {
@@ -140,4 +183,7 @@ async function loadSingleMovie() {
     }
 }
 
-document.addEventListener("DOMContentLoaded", loadSingleMovie);
+document.addEventListener("DOMContentLoaded", () => {
+    setBackLinkFromSession();
+    loadSingleMovie();
+});

@@ -1,3 +1,4 @@
+
 <!doctype html>
 <html lang="en">
 <head>
@@ -66,11 +67,70 @@
             gap:12px;
             margin-bottom:14px;
         }
+
+        .header-left{
+            display:flex;
+            flex-direction:column;
+            gap:10px;
+            min-width:0;
+        }
+
         h1{
             margin:0;
             font-size:28px;
             font-weight:700;
             letter-spacing:-0.02em;
+        }
+
+        .toolbar{
+            display:flex;
+            flex-wrap:wrap;
+            gap:10px;
+            align-items:center;
+        }
+
+        .tool{
+            display:flex;
+            align-items:center;
+            gap:8px;
+            flex-wrap:wrap;
+        }
+
+        .tool-label{
+            font-size:12px;
+            font-weight:800;
+            color:var(--muted);
+            text-transform:uppercase;
+            letter-spacing:.08em;
+        }
+
+        .select{
+            padding:10px 14px;
+            border:1px solid var(--border);
+            border-radius:999px;
+            background:var(--panel);
+            color:var(--text);
+            font-weight:700;
+            cursor:pointer;
+            outline:none;
+            appearance:none;
+            -webkit-appearance:none;
+            -moz-appearance:none;
+        }
+
+        .select:focus{
+            border-color:var(--accent);
+            box-shadow:0 0 0 3px rgba(95,100,239,.15);
+        }
+
+        .page-label{
+            padding:10px 14px;
+            border:1px solid var(--border);
+            border-radius:999px;
+            background:var(--panel);
+            font-weight:700;
+            color:var(--text);
+            white-space:nowrap;
         }
 
         table{
@@ -113,6 +173,11 @@
             white-space:nowrap;
         }
 
+        .btn:disabled{
+            opacity:.55;
+            cursor:not-allowed;
+        }
+
         a.btn{
             color:var(--text);
             text-decoration:none;
@@ -125,19 +190,64 @@
             text-decoration:none;
         }
 
+        button.btn:hover{
+            background:var(--subtle);
+            border-color:var(--accent);
+            color:var(--accentHover);
+        }
+
+        @media (max-width: 780px){
+            .header{
+                align-items:flex-start;
+                flex-direction:column;
+            }
+        }
     </style>
 </head>
 
 <body>
 <div class="container">
     <div class="header">
-        <div>
+        <div class="header-left">
             <h1>Top 20 Movies</h1>
+
+            <div class="toolbar">
+                <div class="tool">
+                    <span class="tool-label">Sort</span>
+                    <select id="sort_select" class="select">
+                        <option value="rating_title">Rating, then Title</option>
+                        <option value="title_rating">Title, then Rating</option>
+                    </select>
+                </div>
+
+                <div class="tool">
+                    <span class="tool-label">Direction</span>
+                    <select id="dir_select" class="select">
+                        <option value="desc">Descending</option>
+                        <option value="asc">Ascending</option>
+                    </select>
+                </div>
+
+                <div class="tool">
+                    <span class="tool-label">Per page</span>
+                    <select id="page_size_select" class="select">
+                        <option value="10">10</option>
+                        <option value="25">25</option>
+                        <option value="50">50</option>
+                        <option value="100">100</option>
+                    </select>
+                </div>
+
+                <div class="tool">
+                    <button class="btn" id="prev_btn" type="button">Prev</button>
+                    <span class="page-label" id="page_label">Page 1</span>
+                    <button class="btn" id="next_btn" type="button">Next</button>
+                </div>
+            </div>
+        </div>
+
+        <a class="btn" href="main.html?reset=1">← Back to Search</a>
     </div>
-
-    <a class="btn" href="main.html">← Back to Search</a>
-</div>
-
 
     <div class="card">
         <div id="status" class="status">Loading…</div>

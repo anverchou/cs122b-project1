@@ -1,186 +1,230 @@
-<style>
-    :root{
-        --bg:#ffffff;
-        --panel:#ffffff;
-        --subtle:#f7f7f7;
-        --text:#222222;
-        --muted:#717171;
-        --border:#dddddd;
-        --accent:#5f64ef;
-        --accentHover:#1351dc;
-        --shadow:0 6px 18px rgba(0,0,0,.12);
-        --shadowSoft:0 1px 2px rgba(0,0,0,.08);
-        --radius:18px;
-    }
 
-    *{ box-sizing:border-box; }
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Fabflix - Main</title>
 
-    body{
-        margin:0;
-        font-family: system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
-        background:var(--bg);
-        color:var(--text);
-    }
+    <style>
+        :root{
+            --bg:#ffffff;
+            --panel:#ffffff;
+            --subtle:#f7f7f7;
+            --text:#222222;
+            --muted:#717171;
+            --border:#dddddd;
+            --accent:#5f64ef;
+            --accentHover:#1351dc;
+            --shadowSoft:0 1px 2px rgba(0,0,0,.08);
+            --radius:18px;
+        }
 
-    .container{
-        max-width:900px;
-        margin:32px auto;
-        padding:0 16px;
-    }
+        *{ box-sizing:border-box; }
 
-    a{
-        color:var(--accent);
-        text-decoration:none;
-    }
-    a:hover{
-        color:var(--accentHover);
-        text-decoration:underline;
-    }
+        body{
+            margin:0;
+            font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
+            background:var(--bg);
+            color:var(--text);
+        }
 
-    .topbar{
-        display:flex;
-        justify-content:space-between;
-        align-items:center;
-        gap:12px;
-        margin-bottom:14px;
-    }
+        .container{
+            max-width:980px;
+            margin:32px auto;
+            padding:0 16px;
+        }
 
-    h1{
-        margin:0;
-        font-size:28px;
-        font-weight:700;
-        letter-spacing:-0.02em;
-    }
+        a{
+            color:var(--accent);
+            text-decoration:none;
+        }
+        a:hover{
+            color:var(--accentHover);
+            text-decoration:underline;
+        }
 
-    .card{
-        background:var(--panel);
-        border:1px solid var(--border);
-        border-radius:var(--radius);
-        overflow:hidden;
-        box-shadow:var(--shadowSoft);
-        padding:16px;
-    }
+        h1{
+            margin:0 0 10px;
+            font-size:28px;
+            letter-spacing:-.02em;
+        }
 
-    .section{ margin-top:16px; }
+        .card{
+            background:var(--panel);
+            border:1px solid var(--border);
+            border-radius:var(--radius);
+            box-shadow:var(--shadowSoft);
+            padding:16px;
+        }
 
-    .section h2{
-        margin:0 0 10px;
-        font-size:14px;
-        color:var(--muted);
-        text-transform:uppercase;
-        letter-spacing:.08em;
-        font-weight:800;
-    }
+        .section{ margin-top:18px; }
 
-    .grid{
-        display:grid;
-        grid-template-columns: 1fr 1fr;
-        gap:10px 16px;
-        margin-top:10px;
-    }
+        .section h2{
+            margin:0 0 10px;
+            font-size:14px;
+            color:var(--muted);
+            text-transform:uppercase;
+            letter-spacing:.08em;
+            font-weight:800;
+        }
 
-    .field label{
-        display:block;
-        color:var(--muted);
-        font-size:12px;
-        text-transform:uppercase;
-        letter-spacing:.08em;
-        margin-bottom:6px;
-        font-weight:700;
-    }
+        .grid{
+            display:grid;
+            grid-template-columns:1fr 1fr;
+            gap:12px;
+        }
 
-    .field input{
-        width:100%;
-        padding:10px 12px;
-        border:1px solid var(--border);
-        border-radius:14px;
-        background:var(--panel);
-        font-size:14px;
-        outline:none;
-    }
+        .field label{
+            display:block;
+            font-weight:700;
+            font-size:12px;
+            color:var(--muted);
+            text-transform:uppercase;
+            letter-spacing:.08em;
+            margin-bottom:6px;
+        }
 
-    .field input:focus{
-        border-color:var(--accent);
-        box-shadow:0 0 0 3px rgba(95,100,239,.15);
-    }
+        .field input{
+            width:100%;
+            padding:10px 12px;
+            border:1px solid var(--border);
+            border-radius:12px;
+            font-size:14px;
+            background:var(--panel);
+            outline:none;
+        }
 
-    .actions{
-        margin-top:12px;
-        display:flex;
-        gap:10px;
-        align-items:center;
-        flex-wrap:wrap;
-    }
+        .field input:focus{
+            border-color:var(--accent);
+            box-shadow:0 0 0 3px rgba(95,100,239,.15);
+        }
 
-    .btn{
-        display:inline-flex;
-        align-items:center;
-        padding:10px 14px;
-        border:1px solid var(--border);
-        border-radius:999px;
-        background:var(--panel);
-        cursor:pointer;
-        font-weight:700;
-        color:var(--text);
-        text-decoration:none;
-        white-space:nowrap;
-    }
+        .actions{
+            margin-top:12px;
+            display:flex;
+            gap:10px;
+            align-items:center;
+            flex-wrap:wrap;
+        }
 
-    .btn:hover{
-        background:var(--subtle);
-        border-color:var(--accent);
-        color:var(--accentHover);
-        text-decoration:none;
-    }
+        .btn{
+            padding:10px 14px;
+            border:1px solid var(--border);
+            border-radius:999px;
+            background:var(--panel);
+            cursor:pointer;
+            font-weight:700;
+            display:inline-flex;
+            align-items:center;
+            color:var(--text);
+            text-decoration:none;
+            white-space:nowrap;
+        }
 
-    .btn.primary{
-        background:var(--accent);
-        border-color:var(--accent);
-        color:#fff;
-    }
-    .btn.primary:hover{
-        background:var(--accentHover);
-        border-color:var(--accentHover);
-        color:#fff;
-    }
+        .btn:hover{
+            background:var(--subtle);
+            border-color:var(--accent);
+            color:var(--accentHover);
+            text-decoration:none;
+        }
 
-    .chips{
-        display:flex;
-        flex-wrap:wrap;
-        gap:10px;
-    }
+        .btn.primary{
+            background:var(--accent);
+            border-color:var(--accent);
+            color:#fff;
+        }
+        .btn.primary:hover{
+            background:var(--accentHover);
+            border-color:var(--accentHover);
+            color:#fff;
+        }
 
-    .chip{
-        display:inline-flex;
-        align-items:center;
-        padding:8px 12px;
-        border:1px solid var(--border);
-        border-radius:999px;
-        background:var(--panel);
-        font-size:14px;
-        color:var(--text);
-        text-decoration:none;
-    }
+        .chips{
+            display:flex;
+            flex-wrap:wrap;
+            gap:10px;
+        }
 
-    a.chip{
-        color:var(--text);
-        text-decoration:none;
-    }
-    a.chip:hover{
-        background:var(--subtle);
-        border-color:var(--accent);
-        color:var(--accentHover);
-        text-decoration:none;
-    }
+        .chip{
+            display:inline-flex;
+            align-items:center;
+            padding:8px 12px;
+            border:1px solid var(--border);
+            border-radius:999px;
+            background:var(--panel);
+            color:var(--text);
+            font-size:14px;
+            text-decoration:none;
+        }
 
-    .hint{
-        color:var(--muted);
-        font-size:13px;
-        margin-top:8px;
-    }
+        a.chip{
+            color:var(--text);
+            text-decoration:none;
+        }
+        a.chip:hover{
+            background:var(--subtle);
+            border-color:var(--accent);
+            color:var(--accentHover);
+            text-decoration:none;
+        }
 
-    @media (max-width: 720px){
-        .grid{ grid-template-columns: 1fr; }
-        .topbar{ align-items:flex-start; flex-direction:column; }
-    }
-</style>
+        .hint{
+            color:var(--muted);
+            font-size:13px;
+            margin-top:6px;
+        }
+
+        @media (max-width: 720px){
+            .grid{ grid-template-columns:1fr; }
+        }
+    </style>
+</head>
+
+<body>
+<div class="container">
+    <h1>Fabflix</h1>
+    <button class="btn" id="logout_btn" type="button">Sign out</button>
+
+    <div class="card">
+        <div class="section" style="margin-top:0;">
+            <h2>Search</h2>
+
+            <form id="search_form" action="movielist.html" method="get">
+                <div class="grid">
+                    <div class="field">
+                        <label>Title</label>
+                        <input name="title"/>
+                    </div>
+                    <div class="field">
+                        <label>Year</label>
+                        <input name="year"/>
+                    </div>
+                    <div class="field">
+                        <label>Director</label>
+                        <input name="director"/>
+                    </div>
+                    <div class="field">
+                        <label>Star Name</label>
+                        <input name="star"/>
+                    </div>
+                </div>
+
+                <div class="actions">
+                    <button class="btn primary" type="submit" form="search_form">Search</button>
+                    <a class="btn" href="movielist.html?reset=1">Top 20 Rated</a>
+                </div>
+            </form>
+        </div>
+
+        <div class="section">
+            <h2>Browse by Genre</h2>
+            <div id="genres" class="chips"></div>
+            <div class="hint" id="genres_hint"></div>
+        </div>
+    </div>
+</div>
+
+<script src="main.js?v=3"></script>
+</body>
+</html>

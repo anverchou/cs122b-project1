@@ -63,6 +63,9 @@ function setupSearchForm() {
                 params.set(k, val);
             }
         }
+        // Clear old session filters
+        params.set("reset", "1");
+        params.set("page", "1");
 
         // If user submits with nothing filled, go to Top 20
         const qs = params.toString();
@@ -111,7 +114,7 @@ async function loadGenres() {
         genres.sort((a, b) => String(a.name).localeCompare(String(b.name)));
 
         wrap.innerHTML = genres.map(g =>
-            `<a class="chip" href="movielist.html?genreId=${encodeURIComponent(g.id)}">${esc(g.name)}</a>`
+            `<a class="chip" href="movielist.html?reset=1&genreId=${encodeURIComponent(g.id)}">${esc(g.name)}</a>`
         ).join("");
 
     } catch (e) {
@@ -121,8 +124,37 @@ async function loadGenres() {
     }
 }
 
+// Clear Search of previous filters
+function clearSearchUI() {
+    const form = document.getElementById("search_form");
+    if (form) form.reset();
+}
+
+async function clearMovielistStateIfRequested() {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("reset") !== "1") return;
+
+    // 1) Clear the visible inputs
+    clearSearchUI();
+
+    // 2) Clear server-side movielist session
+    try {
+        await fetch(`${getContextPath()}/movielist?reset=1`, {
+            headers: { "Accept": "application/json" }
+        });
+        // Ignore as it will still get cleared
+    } catch (_) {
+    }
+
+    params.delete("reset");
+    const qs = params.toString();
+    history.replaceState({}, "", qs ? `${window.location.pathname}?${qs}` : window.location.pathname);
+}
+
+
 // Initalize Content
 document.addEventListener("DOMContentLoaded", () => {
+    clearMovielistStateIfRequested();
     setupLogout();
     setupSearchForm();
     loadGenres();

@@ -13,16 +13,19 @@ import java.sql.*;
  *   - rating (nullable)
  *   - all genres (comma-separated string)
  * all stars (comma-separated "id:name" pairs)
+ *
+ * NOTE: genres/stars are returned as JSON arrays of objects {id, name}
+ * so the frontend can hyperlink each genre/star cleanly.
  */
 @WebServlet("/singlemovie")
 public class SingleMovieServlet extends HttpServlet {
-     /* 1) Read movieId from query param
-      * 2) Validate it exists
-      * 3) Query movie core info + rating
-      * 4) Query all genres
-      * 5) Query all stars
-      * 6) Write final JSON object
-      */
+    /* 1) Read movieId from query param
+     * 2) Validate it exists
+     * 3) Query movie core info + rating
+     * 4) Query all genres
+     * 5) Query all stars
+     * 6) Write final JSON object
+     */
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws IOException {
         String loginUser = "root";
@@ -50,7 +53,7 @@ public class SingleMovieServlet extends HttpServlet {
 
             try (Connection connection = DriverManager.getConnection(loginUrl, loginUser, loginPasswd)) {
 
-                // 1) Movie core info + rating
+                // 1) Movie core info and rating
                 String movieQuery =
                         "SELECT m.id, m.title, m.year, m.director, r.rating " +
                                 "FROM movies m " +
@@ -81,65 +84,94 @@ public class SingleMovieServlet extends HttpServlet {
 
                 // 2) All genres
                 String genresQuery =
-                        "SELECT DISTINCT g.name " +
+                        "SELECT DISTINCT g.id, g.name " +
                                 "FROM genres_in_movies gim " +
                                 "JOIN genres g ON g.id = gim.genreId " +
                                 "WHERE gim.movieId = ? " +
                                 "ORDER BY g.name";
 
-                StringBuilder genresSb = new StringBuilder();
-                try (PreparedStatement ps = connection.prepareStatement(genresQuery)) {
-                    ps.setString(1, movieId);
-                    try (ResultSet rs = ps.executeQuery()) {
-                        boolean first = true;
-                        while (rs.next()) {
-                            if (!first) genresSb.append(", ");
-                            first = false;
-                            genresSb.append(rs.getString("name"));
-                        }
-                    }
-                }
-                String genres = genresSb.length() == 0 ? "N/A" : genresSb.toString();
-
-                // 3) All stars as
+                // 3) All stars
                 String starsQuery =
-                        "SELECT DISTINCT s.id, s.name " +
+                        "SELECT s.id, s.name, " +
+                                "  (SELECT COUNT(DISTINCT sim2.movieId) " +
+                                "   FROM stars_in_movies sim2 " +
+                                "   WHERE sim2.starId = s.id) AS movieCount " +
                                 "FROM stars_in_movies sim " +
                                 "JOIN stars s ON s.id = sim.starId " +
                                 "WHERE sim.movieId = ? " +
-                                "ORDER BY s.name";
-
-                StringBuilder starsSb = new StringBuilder();
-                try (PreparedStatement ps = connection.prepareStatement(starsQuery)) {
-                    ps.setString(1, movieId);
-                    try (ResultSet rs = ps.executeQuery()) {
-                        boolean first = true;
-                        while (rs.next()) {
-                            if (!first) starsSb.append(", ");
-                            first = false;
-                            String sid = rs.getString("id");
-                            String sname = rs.getString("name");
-                            starsSb.append(sid).append(":").append(sname);
-                        }
-                    }
-                }
-                String stars = starsSb.length() == 0 ? "N/A" : starsSb.toString();
+                                "GROUP BY s.id, s.name " +
+                                "ORDER BY movieCount DESC, s.name ASC";
 
                 // 4) JSON response
                 out.print("{");
-                out.print("\"id\":\"" + escapeJson(movieId) + "\",");
-                out.print("\"title\":\"" + escapeJson(title) + "\",");
+
+                out.print("\"id\":\"");
+                out.print(escapeJson(movieId));
+                out.print("\",");
+
+                out.print("\"title\":\"");
+                out.print(escapeJson(title));
+                out.print("\",");
 
                 // year number or null
-                out.print("\"year\":" + (year == null ? "null" : year) + ",");
+                out.print("\"year\":");
+                out.print(year == null ? "null" : String.valueOf(year));
+                out.print(",");
 
-                out.print("\"director\":\"" + escapeJson(director) + "\",");
+                out.print("\"director\":\"");
+                out.print(escapeJson(director));
+                out.print("\",");
 
-                out.print("\"genres\":\"" + escapeJson(genres) + "\",");
-                out.print("\"stars\":\"" + escapeJson(stars) + "\",");
+                // Rating number or null
+                out.print("\"rating\":");
+                out.print(rating == null ? "null" : String.valueOf(rating));
+                out.print(",");
 
-                // rating number or null
-                out.print("\"rating\":" + (rating == null ? "null" : rating));
+                // genres array
+                out.print("\"genres\":[");
+                boolean firstGenre = true;
+                try (PreparedStatement ps = connection.prepareStatement(genresQuery)) {
+                    ps.setString(1, movieId);
+                    try (ResultSet rs = ps.executeQuery()) {
+                        while (rs.next()) {
+                            if (!firstGenre) out.print(",");
+                            firstGenre = false;
+
+                            int gid = rs.getInt("id");
+                            String gname = rs.getString("name");
+
+                            out.print("{\"id\":");
+                            out.print(gid);
+                            out.print(",\"name\":\"");
+                            out.print(escapeJson(gname));
+                            out.print("\"}");
+                        }
+                    }
+                }
+                out.print("],");
+
+                // stars array
+                out.print("\"stars\":[");
+                boolean firstStar = true;
+                try (PreparedStatement ps = connection.prepareStatement(starsQuery)) {
+                    ps.setString(1, movieId);
+                    try (ResultSet rs = ps.executeQuery()) {
+                        while (rs.next()) {
+                            if (!firstStar) out.print(",");
+                            firstStar = false;
+
+                            String sid = rs.getString("id");
+                            String sname = rs.getString("name");
+
+                            out.print("{\"id\":\"");
+                            out.print(escapeJson(sid));
+                            out.print("\",\"name\":\"");
+                            out.print(escapeJson(sname));
+                            out.print("\"}");
+                        }
+                    }
+                }
+                out.print("]");
 
                 out.print("}");
             }

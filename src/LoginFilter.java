@@ -11,18 +11,22 @@ public class LoginFilter implements Filter {
     /**
      *   1) allow the request to continue,
      *   2) redirect the user to the login page (for HTML/pages), or
-     *   3) return HTTP 401 (for API/AJAX requests).
-    */
+     *   3) return HTTP 401
+     */
     // List of URI suffixes
     private final ArrayList<String> allowedURIs = new ArrayList<>();
 
-    // Initialize filter to popular allowedURIs
+    // Initialize filter
     @Override
     public void init(FilterConfig filterConfig) {
+        // Public pages/assets
         allowedURIs.add("login.html");
         allowedURIs.add("login.js");
+
+        // Public endpoints
         allowedURIs.add("api/login");
         allowedURIs.add("api/logout");
+
     }
 
     // Filter for incoming requests
@@ -58,6 +62,7 @@ public class LoginFilter implements Filter {
             return;
         }
 
+        // Decide whether this request is an API/AJAX call:
         boolean isApi =
                 path.equals("/movielist") ||
                         path.equals("/singlemovie") ||
@@ -71,14 +76,18 @@ public class LoginFilter implements Filter {
             res.setCharacterEncoding("UTF-8");
             res.getWriter().write("{\"status\":\"fail\",\"message\":\"not logged in\"}");
         } else {
-            // Redirect browser to login page
-            res.sendRedirect("login.html");
+            // Redirect browser to login page for normal page navigation
+            res.sendRedirect(contextPath + "/login.html");
         }
     }
 
     // Check if a path is accessible without being logged in
     private boolean isAllowedWithoutLogin(String path) {
+        // Normalize and check suffix matches
         String lower = path.toLowerCase();
         return allowedURIs.stream().anyMatch(lower::endsWith);
     }
+
+    @Override
+    public void destroy()  {}
 }
