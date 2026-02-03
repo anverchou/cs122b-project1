@@ -160,9 +160,9 @@ function renderTitleBrowse() {
     for (let i = 0; i <= 9; i++) chars.push(String(i));
     for (let c = 65; c <= 90; c++) chars.push(String.fromCharCode(c));
     chars.push("*");
-
+    
     wrap.innerHTML = chars
-        .map(ch => `<a class="chip" href="movielist.html?startsWith=${encodeURIComponent(ch)}">${esc(ch)}</a>`)
+        .map(ch => `<a class="chip" href="movielist.html?startsWith=${encodeURIComponent(ch)}&reset=1">${esc(ch)}</a>`)
         .join("");
 }
 
