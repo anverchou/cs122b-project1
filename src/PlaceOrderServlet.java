@@ -26,7 +26,7 @@ public class PlaceOrderServlet extends HttpServlet {
     private static final String CART_KEY = "shopping_cart";
     private static final String LAST_ORDER_KEY = "last_order";
 
-    private static final String loginUser = "admin";
+    private static final String loginUser = "mytestuser";
     private static final String loginPasswd = "password";
     private static final String loginUrl = "jdbc:mysql://localhost:3306/moviedb";
 

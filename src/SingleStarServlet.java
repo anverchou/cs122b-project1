@@ -18,7 +18,7 @@ public class SingleStarServlet extends HttpServlet {
      */
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws IOException {
-        String loginUser = "admin";
+        String loginUser = "mytestuser";
         String loginPasswd = "password";
         String loginUrl = "jdbc:mysql://localhost:3306/moviedb";
 
