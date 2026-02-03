@@ -1,0 +1,163 @@
+
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Fabflix - Order Confirmation</title>
+
+    <style>
+        :root{
+            --bg:#ffffff;
+            --panel:#ffffff;
+            --subtle:#f7f7f7;
+            --text:#222222;
+            --muted:#717171;
+            --border:#dddddd;
+            --accent:#5f64ef;
+            --accentHover:#1351dc;
+            --shadowSoft:0 1px 2px rgba(0,0,0,.08);
+            --radius:18px;
+        }
+
+        *{ box-sizing:border-box; }
+
+        body{
+            margin:0;
+            font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
+            background:var(--bg);
+            color:var(--text);
+        }
+
+        .container{
+            max-width:980px;
+            margin:32px auto;
+            padding:0 16px;
+        }
+
+        .topbar{
+            display:flex;
+            justify-content:space-between;
+            align-items:center;
+            gap:12px;
+            margin-bottom:14px;
+        }
+
+        h1{
+            margin:0;
+            font-size:28px;
+            font-weight:700;
+            letter-spacing:-.02em;
+        }
+
+        .btn{
+            padding:10px 14px;
+            border:1px solid var(--border);
+            border-radius:999px;
+            background:var(--panel);
+            cursor:pointer;
+            font-weight:700;
+            display:inline-flex;
+            align-items:center;
+            gap:8px;
+            white-space:nowrap;
+            text-decoration:none;
+            color:var(--text);
+        }
+
+        .btn:hover{
+            background:var(--subtle);
+            border-color:var(--accent);
+            color:var(--accentHover);
+        }
+
+        .card{
+            background:var(--panel);
+            border:1px solid var(--border);
+            border-radius:var(--radius);
+            box-shadow:var(--shadowSoft);
+            overflow:hidden;
+        }
+
+        .status{
+            color:var(--muted);
+            padding:12px 16px;
+            border-bottom:1px solid var(--border);
+        }
+
+        .content{
+            padding:16px;
+        }
+
+        table{
+            width:100%;
+            border-collapse:collapse;
+        }
+
+        th, td{
+            padding:12px 14px;
+            border-bottom:1px solid var(--border);
+            vertical-align:top;
+        }
+
+        th{
+            text-align:left;
+            font-size:12px;
+            font-weight:800;
+            text-transform:uppercase;
+            letter-spacing:.08em;
+            color:var(--muted);
+        }
+
+        .total{
+            display:flex;
+            justify-content:flex-end;
+            gap:10px;
+            margin-top:14px;
+            font-size:16px;
+        }
+
+        .total strong{
+            font-size:18px;
+        }
+    </style>
+</head>
+
+<body>
+<div class="container">
+    <div class="topbar">
+        <h1>Order Confirmation</h1>
+        <div class="actions">
+            <a class="btn" href="cart.html">Checkout</a>
+            <a class="btn" href="main.html?reset=1">← Back to Search</a>
+        </div>
+    </div>
+
+    <div class="card">
+        <div id="status" class="status">Loading…</div>
+        <div class="content">
+            <div id="meta" style="margin-bottom:12px; color:var(--muted);"></div>
+
+            <table>
+                <thead>
+                <tr>
+                    <th style="width:52%">Movie</th>
+                    <th style="width:16%">Price</th>
+                    <th style="width:16%">Qty</th>
+                    <th style="width:16%">Subtotal</th>
+                </tr>
+                </thead>
+                <tbody id="items_body"></tbody>
+            </table>
+
+            <div class="total">
+                <span>Total:</span>
+                <strong id="total_value">$0.00</strong>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="confirmation.js?v=1"></script>
+</body>
+</html>

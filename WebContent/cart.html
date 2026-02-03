@@ -1,0 +1,214 @@
+
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Fabflix - Shopping Cart</title>
+
+    <style>
+        :root{
+            --bg:#ffffff;
+            --panel:#ffffff;
+            --subtle:#f7f7f7;
+            --text:#222222;
+            --muted:#717171;
+            --border:#dddddd;
+            --accent:#5f64ef;
+            --accentHover:#1351dc;
+            --shadowSoft:0 1px 2px rgba(0,0,0,.08);
+            --radius:18px;
+        }
+
+        *{ box-sizing:border-box; }
+
+        body{
+            margin:0;
+            font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
+            background:var(--bg);
+            color:var(--text);
+        }
+
+        .container{
+            max-width:980px;
+            margin:32px auto;
+            padding:0 16px;
+        }
+
+        .topbar{
+            display:flex;
+            align-items:flex-end;
+            justify-content:space-between;
+            gap:12px;
+            margin-bottom:14px;
+        }
+
+        h1{
+            margin:0;
+            font-size:28px;
+            letter-spacing:-.02em;
+        }
+
+        .card{
+            background:var(--panel);
+            border:1px solid var(--border);
+            border-radius:var(--radius);
+            overflow:hidden;
+            box-shadow:var(--shadowSoft);
+        }
+
+        .status{
+            color:var(--muted);
+            padding:12px 16px;
+            border-bottom:1px solid var(--border);
+            background:var(--panel);
+        }
+
+        table{
+            width:100%;
+            border-collapse:collapse;
+        }
+
+        th, td{
+            padding:14px 16px;
+            border-bottom:1px solid var(--border);
+            vertical-align:top;
+        }
+
+        th{
+            text-align:left;
+            font-size:12px;
+            font-weight:800;
+            text-transform:uppercase;
+            letter-spacing:.08em;
+            color:var(--muted);
+        }
+
+        tr:hover td{
+            background:var(--subtle);
+        }
+
+        .nowrap{ white-space:nowrap; }
+
+        .btn{
+            padding:10px 14px;
+            border:1px solid var(--border);
+            border-radius:999px;
+            background:var(--panel);
+            cursor:pointer;
+            font-weight:700;
+            display:inline-flex;
+            align-items:center;
+            gap:8px;
+            white-space:nowrap;
+            color:var(--text);
+            text-decoration:none;
+        }
+
+        .btn:hover{
+            background:var(--subtle);
+            border-color:var(--accent);
+            color:var(--accentHover);
+            text-decoration:none;
+        }
+
+        .btn.primary{
+            background:var(--accent);
+            border-color:var(--accent);
+            color:#fff;
+        }
+
+        .btn.primary:hover{
+            background:var(--accentHover);
+            border-color:var(--accentHover);
+            color:#fff;
+        }
+
+        .btn:disabled{
+            opacity:.55;
+            cursor:not-allowed;
+        }
+
+        .qty{
+            display:inline-flex;
+            align-items:center;
+            gap:8px;
+        }
+
+        .qty-btn{
+            width:34px;
+            height:34px;
+            border-radius:999px;
+            border:1px solid var(--border);
+            background:var(--panel);
+            cursor:pointer;
+            font-weight:800;
+        }
+
+        .qty-btn:hover{
+            background:var(--subtle);
+            border-color:var(--accent);
+            color:var(--accentHover);
+        }
+
+        .right{ text-align:right; }
+
+        .footer{
+            display:flex;
+            justify-content:space-between;
+            align-items:center;
+            padding:14px 16px;
+            gap:12px;
+            flex-wrap:wrap;
+        }
+
+        .total{
+            font-weight:800;
+        }
+
+        .muted{ color:var(--muted); }
+    </style>
+</head>
+
+<body>
+<div class="container">
+    <div class="topbar">
+        <div>
+            <h1>Shopping Cart</h1>
+        </div>
+
+        <div style="display:flex; gap:10px; flex-wrap:wrap;">
+            <a class="btn" href="main.html?reset=1">← Back to Search</a>
+            <a class="btn" href="cart.html">Checkout</a>
+        </div>
+    </div>
+
+    <div class="card">
+        <div id="status" class="status">Loading…</div>
+
+        <table>
+            <thead>
+            <tr>
+                <th style="width:46%">Movie</th>
+                <th class="nowrap" style="width:14%">Price</th>
+                <th class="nowrap" style="width:18%">Quantity</th>
+                <th class="nowrap" style="width:14%">Subtotal</th>
+                <th class="nowrap" style="width:8%">Remove</th>
+            </tr>
+            </thead>
+            <tbody id="cart_table_body"></tbody>
+        </table>
+
+        <div class="footer">
+            <div class="total">Total: <span id="cart_total">$0.00</span></div>
+            <div style="display:flex; gap:10px; flex-wrap:wrap;">
+                <button class="btn" id="clear_btn" type="button">Clear Cart</button>
+                <a class="btn primary" id="pay_btn" href="payment.html">Proceed to Payment</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="cart.js?v=1"></script>
+</body>
+</html>

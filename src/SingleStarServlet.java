@@ -11,15 +11,15 @@ import java.sql.*;
 @WebServlet("/singlestar")
 public class SingleStarServlet extends HttpServlet {
     /* 1) Read starId from query param
-       * 2) Validate it exists
-       * 3) Query star core info
-       * 4) Query movies the star appeared
-       * 5) Write final JSON
-    */
+     * 2) Validate it exists
+     * 3) Query star core info
+     * 4) Query movies the star appeared
+     * 5) Write final JSON
+     */
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws IOException {
-        String loginUser = "root";
-        String loginPasswd = "Teehee1324!";
+        String loginUser = "admin";
+        String loginPasswd = "password";
         String loginUrl = "jdbc:mysql://localhost:3306/moviedb";
 
         response.setContentType("application/json");
@@ -60,12 +60,13 @@ public class SingleStarServlet extends HttpServlet {
                 }
 
                 // 2) Movies the star acted in
+                // Requirement: sorted by year DESC then title ASC
                 String moviesQuery =
                         "SELECT DISTINCT m.id, m.title " +
                                 "FROM stars_in_movies sim " +
                                 "JOIN movies m ON m.id = sim.movieId " +
                                 "WHERE sim.starId = ? " +
-                                "ORDER BY m.title";
+                                "ORDER BY m.year DESC, m.title ASC";
 
                 StringBuilder moviesSb = new StringBuilder();
                 try (PreparedStatement ps = connection.prepareStatement(moviesQuery)) {

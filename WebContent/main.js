@@ -151,11 +151,27 @@ async function clearMovielistStateIfRequested() {
     history.replaceState({}, "", qs ? `${window.location.pathname}?${qs}` : window.location.pathname);
 }
 
+// Browse by movie title requirement
+function renderTitleBrowse() {
+    const wrap = document.getElementById("title_browse");
+    if (!wrap) return;
+
+    const chars = [];
+    for (let i = 0; i <= 9; i++) chars.push(String(i));
+    for (let c = 65; c <= 90; c++) chars.push(String.fromCharCode(c));
+    chars.push("*");
+
+    wrap.innerHTML = chars
+        .map(ch => `<a class="chip" href="movielist.html?startsWith=${encodeURIComponent(ch)}">${esc(ch)}</a>`)
+        .join("");
+}
+
 
 // Initalize Content
 document.addEventListener("DOMContentLoaded", () => {
     clearMovielistStateIfRequested();
     setupLogout();
     setupSearchForm();
+    renderTitleBrowse();
     loadGenres();
 });

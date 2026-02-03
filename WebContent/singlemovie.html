@@ -1,4 +1,5 @@
 
+
 <!doctype html>
 <html lang="en">
 <head>
@@ -68,6 +69,13 @@
             margin-bottom:14px;
         }
 
+        .top-actions{
+            display:flex;
+            gap:10px;
+            align-items:center;
+            flex-wrap:wrap;
+        }
+
         .back a{
             color:var(--text);
             text-decoration:none;
@@ -76,6 +84,34 @@
         .back a:hover{
             color:var(--text);
             text-decoration:underline;
+        }
+
+        .btn{
+            padding:10px 14px;
+            border:1px solid var(--border);
+            border-radius:999px;
+            background:var(--panel);
+            cursor:pointer;
+            font-weight:700;
+            display:inline-flex;
+            align-items:center;
+            gap:8px;
+            white-space:nowrap;
+            color:var(--text);
+            text-decoration:none;
+        }
+
+        .btn:hover{
+            background:var(--subtle);
+            border-color:var(--accent);
+            color:var(--accentHover);
+            text-decoration:none;
+        }
+
+        .msg{
+            color:var(--muted);
+            font-size:13px;
+            margin-top:8px;
         }
 
         .content{ padding:16px; }
@@ -180,6 +216,10 @@
 <div class="container">
     <div class="topbar">
         <div class="back"><a href="movielist.html">← Back to Movie List</a></div>
+        <div class="top-actions">
+            <button class="btn" id="add_to_cart_btn" type="button">Add to Shopping Cart</button>
+            <a class="btn" href="cart.html">Checkout</a>
+        </div>
     </div>
 
     <div class="card">
@@ -187,6 +227,8 @@
 
         <div class="content">
             <h1 id="movie_title">Movie</h1>
+
+            <div id="cart_msg" class="msg"></div>
 
             <div class="pills-row">
                 <div class="info-pill" id="movie_year_pill">Year: —</div>

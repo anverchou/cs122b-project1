@@ -1,4 +1,5 @@
 
+
 <!doctype html>
 <html lang="en">
 <head>
@@ -66,6 +67,33 @@
             align-items:center;
             gap:12px;
             margin-bottom:14px;
+        }
+
+        .top-actions{
+            display:flex;
+            gap:10px;
+            align-items:center;
+            flex-wrap:wrap;
+        }
+
+        .btn{
+            padding:10px 14px;
+            border:1px solid var(--border);
+            border-radius:999px;
+            background:var(--panel);
+            cursor:pointer;
+            font-weight:700;
+            display:inline-flex;
+            align-items:center;
+            color:var(--text);
+            text-decoration:none;
+            white-space:nowrap;
+        }
+        .btn:hover{
+            background:var(--subtle);
+            border-color:var(--accent);
+            color:var(--accentHover);
+            text-decoration:none;
         }
         .back a{
             color:var(--text);
@@ -175,6 +203,9 @@
 <div class="container">
     <div class="topbar">
         <div class="back"><a href="movielist.html">← Back to Movie List</a></div>
+        <div class="top-actions">
+            <a class="btn" href="cart.html">Checkout</a>
+        </div>
     </div>
 
     <div class="card">

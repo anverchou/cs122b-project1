@@ -16,6 +16,54 @@ function getContextPath() {
     return i === -1 ? "" : path.substring(0, i);
 }
 
+// Add movie to cart
+async function addToCart(movieId) {
+    const res = await fetch(`${getContextPath()}/api/cart`, {
+        method: "POST",
+        headers: { "Content-Type": "application/x-www-form-urlencoded" },
+        body: new URLSearchParams({ action: "add", movieId: movieId })
+    });
+
+    if (res.status === 401) {
+        window.location.replace("login.html");
+        return { ok: false, message: "Not logged in" };
+    }
+
+    if (!res.ok) {
+        const t = await res.text();
+        return { ok: false, message: `HTTP ${res.status}: ${t.slice(0, 200)}` };
+    }
+
+    return { ok: true };
+}
+
+function flashMsg(text, isError = false) {
+    const el = document.getElementById("cart_msg");
+    if (!el) return;
+
+    if (!text) {
+        el.textContent = "";
+        el.style.display = "none";
+        el.style.color = "";
+        return;
+    }
+
+    el.textContent = text;
+    el.style.display = "";
+    el.style.color = isError ? "crimson" : "";
+
+    // auto-hide success messages
+    if (!isError) {
+        setTimeout(() => {
+            if (el.textContent === text) {
+                el.textContent = "";
+                el.style.display = "none";
+                el.style.color = "";
+            }
+        }, 1200);
+    }
+}
+
 // Read movieid from page url query
 function getMovieIdFromURL() {
     const params = new URLSearchParams(window.location.search);
@@ -173,6 +221,22 @@ async function loadSingleMovie() {
 
         renderGenres(m.genres);
         renderStars(m.stars);
+
+        // Add-to-cart button
+        const addBtn = document.getElementById("add_to_cart_btn");
+        if (addBtn) {
+            addBtn.onclick = async () => {
+                addBtn.disabled = true;
+                try {
+                    const ok = await addToCart(movieId);
+                    flashMsg(ok ? "Added to cart!" : "Add to cart failed.", !ok);
+                } catch (err) {
+                    flashMsg("Add to cart failed: " + (err?.message || String(err)), true);
+                } finally {
+                    addBtn.disabled = false;
+                }
+            };
+        }
 
         statusEl.textContent = "";
         statusEl.style.display = "none";

@@ -28,8 +28,8 @@ public class SingleMovieServlet extends HttpServlet {
      */
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws IOException {
-        String loginUser = "root";
-        String loginPasswd = "Teehee1324!";
+        String loginUser = "admin";
+        String loginPasswd = "password";
         String loginUrl = "jdbc:mysql://localhost:3306/moviedb";
 
         response.setContentType("application/json");
@@ -53,7 +53,7 @@ public class SingleMovieServlet extends HttpServlet {
 
             try (Connection connection = DriverManager.getConnection(loginUrl, loginUser, loginPasswd)) {
 
-                // 1) Movie core info and rating
+                // 1) Movie core info + rating
                 String movieQuery =
                         "SELECT m.id, m.title, m.year, m.director, r.rating " +
                                 "FROM movies m " +
@@ -83,6 +83,11 @@ public class SingleMovieServlet extends HttpServlet {
                 }
 
                 // 2) All genres
+                // Requirement: sorted by alphabetical order + hyperlinkable (need genre id)
+                // Output format: "id:name, id:name, ..."
+                //
+                // New output in JSON:
+                //   "genres": [ { "id": 1, "name": "Action" }, ... ]
                 String genresQuery =
                         "SELECT DISTINCT g.id, g.name " +
                                 "FROM genres_in_movies gim " +
@@ -90,7 +95,13 @@ public class SingleMovieServlet extends HttpServlet {
                                 "WHERE gim.movieId = ? " +
                                 "ORDER BY g.name";
 
-                // 3) All stars
+                // 3) All stars as
+                // Requirement: sorted by number of movies played DESC, tie by name ASC
+                //
+                // New output in JSON:
+                //   "stars": [ { "id": "nm123", "name": "Some Star" }, ... ]
+                //
+                // Use a correlated subquery for movieCount to avoid join-multiplication issues.
                 String starsQuery =
                         "SELECT s.id, s.name, " +
                                 "  (SELECT COUNT(DISTINCT sim2.movieId) " +
@@ -122,12 +133,12 @@ public class SingleMovieServlet extends HttpServlet {
                 out.print(escapeJson(director));
                 out.print("\",");
 
-                // Rating number or null
+                // rating number or null
                 out.print("\"rating\":");
                 out.print(rating == null ? "null" : String.valueOf(rating));
                 out.print(",");
 
-                // genres array
+                // ---- genres array ----
                 out.print("\"genres\":[");
                 boolean firstGenre = true;
                 try (PreparedStatement ps = connection.prepareStatement(genresQuery)) {
@@ -150,7 +161,7 @@ public class SingleMovieServlet extends HttpServlet {
                 }
                 out.print("],");
 
-                // stars array
+                // ---- stars array ----
                 out.print("\"stars\":[");
                 boolean firstStar = true;
                 try (PreparedStatement ps = connection.prepareStatement(starsQuery)) {
