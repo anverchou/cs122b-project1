@@ -2,6 +2,11 @@ CREATE DATABASE moviedb;
 
 USE moviedb;
 
+CREATE TABLE IF NOT EXISTS movie_prices (
+    movieId VARCHAR(10) PRIMARY KEY,
+    price DECIMAL(10,2) NOT NULL
+);
+
 CREATE TABLE IF NOT EXISTS movies(
 	id varchar(10) primary key,
     title varchar(100) not null,
