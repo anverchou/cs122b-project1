@@ -167,31 +167,37 @@ function updateLocation(changes) {
 // Toolbar for sorting/filters
 function setupControls() {
     const sortSel = document.getElementById("sort_select");
-    const dirSel = document.getElementById("dir_select");
+
+    const ratingDirSel = document.getElementById("rating_dir_select");
+    const titleDirSel = document.getElementById("title_dir_select");
+
     const pageSizeSel = document.getElementById("page_size_select");
     const prevBtn = document.getElementById("prev_btn");
     const nextBtn = document.getElementById("next_btn");
 
+    // Keep selected diretions
     if (sortSel) {
         sortSel.addEventListener("change", () => {
-            const dir = dirSel ? dirSel.value : "desc";
-            if (sortSel.value === "title_rating") {
-                updateLocation({ sortPrimary: "title", titleDir: dir, ratingDir: "desc", page: 1 });
-            } else {
-                updateLocation({ sortPrimary: "rating", ratingDir: dir, titleDir: "asc", page: 1 });
-            }
+            const sortPrimary = (sortSel.value === "title_rating") ? "title" : "rating";
+
+            const ratingDir = ratingDirSel ? ratingDirSel.value : (currentState.ratingDir || "desc");
+            const titleDir = titleDirSel ? titleDirSel.value : (currentState.titleDir || "asc");
+
+            updateLocation({ sortPrimary, ratingDir, titleDir, page: 1 });
         });
     }
 
-    if (dirSel) {
-        dirSel.addEventListener("change", () => {
-            const dir = dirSel.value;
-            const sort = sortSel ? sortSel.value : "rating_title";
-            if (sort === "title_rating") {
-                updateLocation({ sortPrimary: "title", titleDir: dir, page: 1 });
-            } else {
-                updateLocation({ sortPrimary: "rating", ratingDir: dir, page: 1 });
-            }
+    // Rating direction changes
+    if (ratingDirSel) {
+        ratingDirSel.addEventListener("change", () => {
+            updateLocation({ ratingDir: ratingDirSel.value, page: 1 });
+        });
+    }
+
+    // Title direction changes for tiebreaker
+    if (titleDirSel) {
+        titleDirSel.addEventListener("change", () => {
+            updateLocation({ titleDir: titleDirSel.value, page: 1 });
         });
     }
 
@@ -216,9 +222,13 @@ function setupControls() {
     }
 }
 
+// Direction functions
 function syncControls(state, hasPrev, hasNext) {
     const sortSel = document.getElementById("sort_select");
-    const dirSel = document.getElementById("dir_select");
+
+    const ratingDirSel = document.getElementById("rating_dir_select");
+    const titleDirSel = document.getElementById("title_dir_select");
+
     const pageSizeSel = document.getElementById("page_size_select");
     const prevBtn = document.getElementById("prev_btn");
     const nextBtn = document.getElementById("next_btn");
@@ -226,8 +236,8 @@ function syncControls(state, hasPrev, hasNext) {
 
     if (sortSel) sortSel.value = (state.sortPrimary === "title") ? "title_rating" : "rating_title";
 
-    const shownDir = (state.sortPrimary === "title") ? state.titleDir : state.ratingDir;
-    if (dirSel) dirSel.value = (shownDir === "desc") ? "desc" : "asc";
+    if (ratingDirSel) ratingDirSel.value = (state.ratingDir === "asc") ? "asc" : "desc";
+    if (titleDirSel) titleDirSel.value = (state.titleDir === "desc") ? "desc" : "asc";
 
     if (pageSizeSel) pageSizeSel.value = String(state.pageSize ?? 25);
 
