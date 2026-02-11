@@ -7,6 +7,15 @@ function submitLoginForm(e) {
     // Prevent default form submission
     e.preventDefault();
 
+    // Completed Captcha
+    if (typeof grecaptcha !== "undefined") {
+        const token = grecaptcha.getResponse();
+        if (!token) {
+            $("#login_error_message").text("Please complete the reCAPTCHA.");
+            return;
+        }
+    }
+
     // POST to /api/login (relative to your app context)
     const url = "api/login";
 

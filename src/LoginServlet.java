@@ -24,8 +24,8 @@ public class LoginServlet extends HttpServlet {
 
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws IOException {
-        String loginUser = "mytestuser";
-        String loginPasswd = "password";
+        String loginUser = "root";
+        String loginPasswd = "Teehee1324!";
         String loginUrl = "jdbc:mysql://localhost:3306/moviedb";
 
         response.setContentType("application/json");
@@ -35,10 +35,23 @@ public class LoginServlet extends HttpServlet {
         String email = request.getParameter("email");
         String password = request.getParameter("password");
 
+        // reCAPTCHA token
+        String gRecaptchaResponse = request.getParameter("g-recaptcha-response");
+
         if (email == null) email = "";
         if (password == null) password = "";
 
         try {
+            // Verify reCAPTCHA
+            try {
+                RecaptchaVerifyUtils.verify(gRecaptchaResponse);
+            } catch (Exception e) {
+                response.getWriter().write(
+                        "{\"status\":\"fail\",\"message\":\"reCAPTCHA verification failed. Please try again.\"}"
+                );
+                return;
+            }
+
             Class.forName("com.mysql.cj.jdbc.Driver");
 
             // Open Database connection
