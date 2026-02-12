@@ -15,10 +15,18 @@ function esc(s) {
 $(function () {
     const ctx = getContextPath();
     const err = $("#employee_login_error");
-
     $("#employee_login_form").submit(function (e) {
         e.preventDefault();
         err.text("");
+
+        // Capatcha is completed
+        if (typeof grecaptcha !== "undefined") {
+            const token = grecaptcha.getResponse();
+            if (!token) {
+                err.text("Please complete the reCAPTCHA.");
+                return;
+            }
+        }
 
         const form = $(this);
         const btn = form.find("button[type=submit]");
@@ -27,16 +35,18 @@ $(function () {
         $.ajax(ctx + "/api/employee-login", {
             method: "POST",
             dataType: "json",
-            data: form.serialize(),
+            data: form.serialize(), // includes g-recaptcha-response
             success: function (res) {
                 if (res.status === "success") {
                     window.location.replace(ctx + "/_dashboard");
                 } else {
                     err.text(res.message || "Login failed.");
+                    if (typeof grecaptcha !== "undefined") grecaptcha.reset();
                 }
             },
             error: function (xhr) {
                 err.text("Server error: " + (xhr.responseText || xhr.status));
+                if (typeof grecaptcha !== "undefined") grecaptcha.reset();
             },
             complete: function () {
                 btn.prop("disabled", false);

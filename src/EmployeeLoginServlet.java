@@ -38,6 +38,24 @@ public class EmployeeLoginServlet extends HttpServlet {
         if (email == null) email = "";
         if (password == null) password = "";
 
+        // reCAPTCHA token
+        String gRecaptchaResponse = request.getParameter("g-recaptcha-response");
+
+        if (gRecaptchaResponse == null || gRecaptchaResponse.isBlank()) {
+            response.getWriter().write("{\"status\":\"fail\",\"message\":\"Please complete the reCAPTCHA.\"}");
+            return;
+        }
+
+        try {
+            RecaptchaVerifyUtils.verify(gRecaptchaResponse);
+        } catch (Exception e) {
+            response.getWriter().write(
+                    "{\"status\":\"fail\",\"message\":\"reCAPTCHA verification failed. Please try again.\"}"
+            );
+            return;
+        }
+
+
         try {
             Class.forName("com.mysql.cj.jdbc.Driver");
 

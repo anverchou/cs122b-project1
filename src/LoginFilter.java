@@ -4,7 +4,8 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
 import java.io.IOException;
-import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.Set;
 
 @WebFilter(filterName = "LoginFilter", urlPatterns = "/*")
 public class LoginFilter implements Filter {
@@ -14,23 +15,25 @@ public class LoginFilter implements Filter {
      *   3) return HTTP 401
      */
     // List of URI suffixes
-    private final ArrayList<String> allowedURIs = new ArrayList<>();
+    private final Set<String> customerAllowedSuffixes = new HashSet<>();
+    private final Set<String> dashboardAllowedSuffixes = new HashSet<>();
 
-    // Initialize filter
+    // Initalize Filter
     @Override
     public void init(FilterConfig filterConfig) {
-        // Public pages/assets
-        allowedURIs.add("login.html");
-        allowedURIs.add("login.js");
+        // Public pages/assets/endpoints
+        customerAllowedSuffixes.add("/login.html");
+        customerAllowedSuffixes.add("/login.js");
+        customerAllowedSuffixes.add("/api/login");
+        customerAllowedSuffixes.add("/api/logout");
 
-        // Public endpoints
-        allowedURIs.add("api/login");
-        allowedURIs.add("api/logout");
+        dashboardAllowedSuffixes.add("/_dashboard");
+        dashboardAllowedSuffixes.add("/dashboard-login.html");
+        dashboardAllowedSuffixes.add("/dashboard-login.js");
 
-        // Employee dashboard public entry points
-        allowedURIs.add("_dashboard");
-        allowedURIs.add("dashboard-login.html");
-        allowedURIs.add("dashboard-login.js");
+        dashboardAllowedSuffixes.add("/api/employee-login");
+        dashboardAllowedSuffixes.add("/api/employee-logout");
+        dashboardAllowedSuffixes.add("/api/employee-status");
     }
 
     // Filter for incoming requests
@@ -53,10 +56,11 @@ public class LoginFilter implements Filter {
         String uri = req.getRequestURI();
         String path = uri.substring(contextPath.length());
 
-        // Employee dashboard
+        // If this is employee dashboard area
         if (isDashboardArea(path)) {
-            // Allow the dashboard entry
-            if (isAllowedWithoutLogin(path)) {
+
+            // Allow dashboard public entry points + employee login endpoints
+            if (isAllowed(path, dashboardAllowedSuffixes)) {
                 chain.doFilter(request, response);
                 return;
             }
@@ -67,69 +71,73 @@ public class LoginFilter implements Filter {
                 return;
             }
 
-            boolean isApi = path.startsWith("/api/");
-            if (isApi) {
-                res.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-                res.setContentType("application/json");
-                res.setCharacterEncoding("UTF-8");
-                res.getWriter().write("{\"status\":\"fail\",\"message\":\"not logged in\"}");
+            // Not logged in as employee
+            if (isApiRequest(path)) {
+                send401Json(res);
             } else {
+                // Send them to the employee dashboard entry point
                 res.sendRedirect(contextPath + "/_dashboard");
             }
             return;
         }
 
-        // Allow login assets/endpoint
-        if (isAllowedWithoutLogin(path)) {
+        // 2) Otherwise, this is the customer site rules
+        if (isAllowed(path, customerAllowedSuffixes)) {
             chain.doFilter(request, response);
             return;
         }
 
-        // If user is not logged in
-        boolean loggedIn = (req.getSession().getAttribute("user") != null);
-        if (loggedIn) {
+        boolean userLoggedIn = (req.getSession().getAttribute("user") != null);
+        if (userLoggedIn) {
             chain.doFilter(request, response);
             return;
         }
 
-        // Decide whether this request is an API/AJAX call:
-        boolean isApi =
-                path.equals("/movielist") ||
-                        path.equals("/singlemovie") ||
-                        path.equals("/singlestar") ||
-                        path.startsWith("/api/");
-
-        // Return JSON error for unauthorized API access
-        if (isApi) {
-            res.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-            res.setContentType("application/json");
-            res.setCharacterEncoding("UTF-8");
-            res.getWriter().write("{\"status\":\"fail\",\"message\":\"not logged in\"}");
+        // Not logged in as customer
+        if (isApiRequest(path)) {
+            send401Json(res);
         } else {
-            // Redirect browser to login page for normal page navigation
             res.sendRedirect(contextPath + "/login.html");
         }
     }
 
-    // Check if a path is accessible without being logged in
-    private boolean isAllowedWithoutLogin(String path) {
-        // Normalize and check suffix matches
-        String lower = path.toLowerCase();
-        return allowedURIs.stream().anyMatch(lower::endsWith);
+    private boolean isAllowed(String path, Set<String> allowedSuffixes) {
+        String lower = (path == null) ? "" : path.toLowerCase();
+        for (String suffix : allowedSuffixes) {
+            if (lower.endsWith(suffix.toLowerCase())) return true;
+        }
+        return false;
     }
 
-    // Dashboard
+    // Employee dashboard
     private boolean isDashboardArea(String path) {
         String lower = (path == null) ? "" : path.toLowerCase();
+
         return lower.equals("/_dashboard")
-                || lower.endsWith("/dashboard.html")
-                || lower.endsWith("/dashboard.js")
-                || lower.endsWith("/dashboard-login.html")
-                || lower.endsWith("/dashboard-login.js")
+                || lower.equals("/dashboard.html")
+                || lower.equals("/dashboard.js")
+                || lower.equals("/dashboard-login.html")
+                || lower.equals("/dashboard-login.js")
                 || lower.startsWith("/api/employee")
                 || lower.startsWith("/api/dashboard");
     }
 
+    private boolean isApiRequest(String path) {
+        return path != null && (
+                path.startsWith("/api/")
+                        || path.equals("/movielist")
+                        || path.equals("/singlemovie")
+                        || path.equals("/singlestar")
+        );
+    }
+
+    private void send401Json(HttpServletResponse res) throws IOException {
+        res.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+        res.setContentType("application/json");
+        res.setCharacterEncoding("UTF-8");
+        res.getWriter().write("{\"status\":\"fail\",\"message\":\"not logged in\"}");
+    }
+
     @Override
-    public void destroy()  {}
+    public void destroy() {}
 }
