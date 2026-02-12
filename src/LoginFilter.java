@@ -27,6 +27,10 @@ public class LoginFilter implements Filter {
         allowedURIs.add("api/login");
         allowedURIs.add("api/logout");
 
+        // Employee dashboard public entry points
+        allowedURIs.add("_dashboard");
+        allowedURIs.add("dashboard-login.html");
+        allowedURIs.add("dashboard-login.js");
     }
 
     // Filter for incoming requests
@@ -48,6 +52,32 @@ public class LoginFilter implements Filter {
         String contextPath = req.getContextPath();
         String uri = req.getRequestURI();
         String path = uri.substring(contextPath.length());
+
+        // Employee dashboard
+        if (isDashboardArea(path)) {
+            // Allow the dashboard entry
+            if (isAllowedWithoutLogin(path)) {
+                chain.doFilter(request, response);
+                return;
+            }
+
+            boolean employeeLoggedIn = (req.getSession().getAttribute("employee") != null);
+            if (employeeLoggedIn) {
+                chain.doFilter(request, response);
+                return;
+            }
+
+            boolean isApi = path.startsWith("/api/");
+            if (isApi) {
+                res.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                res.setContentType("application/json");
+                res.setCharacterEncoding("UTF-8");
+                res.getWriter().write("{\"status\":\"fail\",\"message\":\"not logged in\"}");
+            } else {
+                res.sendRedirect(contextPath + "/_dashboard");
+            }
+            return;
+        }
 
         // Allow login assets/endpoint
         if (isAllowedWithoutLogin(path)) {
@@ -86,6 +116,18 @@ public class LoginFilter implements Filter {
         // Normalize and check suffix matches
         String lower = path.toLowerCase();
         return allowedURIs.stream().anyMatch(lower::endsWith);
+    }
+
+    // Dashboard
+    private boolean isDashboardArea(String path) {
+        String lower = (path == null) ? "" : path.toLowerCase();
+        return lower.equals("/_dashboard")
+                || lower.endsWith("/dashboard.html")
+                || lower.endsWith("/dashboard.js")
+                || lower.endsWith("/dashboard-login.html")
+                || lower.endsWith("/dashboard-login.js")
+                || lower.startsWith("/api/employee")
+                || lower.startsWith("/api/dashboard");
     }
 
     @Override

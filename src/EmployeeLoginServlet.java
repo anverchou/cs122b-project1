@@ -12,21 +12,20 @@ import org.jasypt.util.password.StrongPasswordEncryptor;
 public class EmployeeLoginServlet extends HttpServlet {
 
     /**
-     *  1) Set JSON response headers.
-     *  2) Read email/password parameters
-     *  3) Connect to MySQL.
-     *  4) Look up employee by email in `employees` table:
-     *      SELECT password, fullname FROM employees WHERE email = ?
-     *  5) If no row -> fail: "employee not found"
-     *  6) Verify password
-     *  7) If password valid:
-     *      - set session attributes
-     *      - return success JSON
+     * 1) Set JSON response headers.
+     * 2) Read email/password parameters
+     * 3) Connect to MySQL.
+     * 4) Look up employee by email in `employees` table:
+     * 5) If no row -> fail: "employee not found"
+     * 6) Verify password
+     * 7) If password valid:
+     * - set session attributes
+     * - return success JSON
      */
 
- private static final String DEFAULT_DB_URL = "jdbc:mysql://localhost:3306/moviedb";
-    private static final String DEFAULT_DB_USER = "root";
-    private static final String DEFAULT_DB_PASS = "Teehee1324!";
+    private static final String DEFAULT_DB_URL = "jdbc:mysql://localhost:3306/moviedb";
+    private static final String DEFAULT_DB_USER = "mytestuser";
+    private static final String DEFAULT_DB_PASS = "password";
 
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws IOException {
@@ -67,10 +66,19 @@ public class EmployeeLoginServlet extends HttpServlet {
                     return;
                 }
 
+                StrongPasswordEncryptor encryptor = new StrongPasswordEncryptor();
+                boolean ok = false;
+                boolean plaintextMatched = false;
+
                 // Verify password with Jaspy
-                boolean ok = new StrongPasswordEncryptor().checkPassword(password, dbPassword);
+                try {
+                    ok = encryptor.checkPassword(password, dbPassword);
+                } catch (Exception ignored) {
+                    ok = false;
+                }
                 if (!ok && dbPassword.equals(password)) {
                     ok = true;
+                    plaintextMatched = true;
                 }
 
                 // Reject invalid password
@@ -83,13 +91,27 @@ public class EmployeeLoginServlet extends HttpServlet {
                 request.getSession().setAttribute("employee", email);
                 if (fullname != null) request.getSession().setAttribute("employee_name", fullname);
 
+                if (plaintextMatched) {
+                    String encrypted = encryptor.encryptPassword(password);
+                    try (PreparedStatement ups = conn.prepareStatement("UPDATE employees SET password = ? WHERE email = ?")) {
+                        ups.setString(1, encrypted);
+                        ups.setString(2, email);
+                        ups.executeUpdate();
+                    }
+                }
+
                 response.getWriter().write("{\"status\":\"success\",\"message\":\"success\"}");
             }
 
         } catch (Exception e) {
             request.getServletContext().log("Employee login error: ", e);
             response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
-            response.getWriter().write("{\"status\":\"fail\",\"message\":\"Exception: " + escapeJson(e.getMessage()) + "\"}");
+
+            // Avoid blank exception messages
+            String msg = e.getMessage();
+            if (msg == null || msg.isBlank()) msg = e.getClass().getSimpleName();
+
+            response.getWriter().write("{\"status\":\"fail\",\"message\":\"Exception: " + escapeJson(msg) + "\"}");
         }
     }
 
