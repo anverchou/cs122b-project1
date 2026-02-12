@@ -237,8 +237,8 @@ public class CartServlet extends HttpServlet {
     }
 
     private static void ensurePriceTable(Connection conn) throws SQLException {
-        try (Statement st = conn.createStatement()) {
-            st.executeUpdate(PRICE_TABLE_SQL);
+        try (PreparedStatement ps = conn.prepareStatement(PRICE_TABLE_SQL)) {
+            ps.executeUpdate();
         }
     }
 

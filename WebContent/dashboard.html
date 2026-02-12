@@ -1,0 +1,248 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Fabflix - Dashboard</title>
+
+    <style>
+        :root{
+            --bg:#ffffff;
+            --panel:#ffffff;
+            --subtle:#f7f7f7;
+            --text:#222;
+            --muted:#666;
+            --border:#dddddd;
+            --accent:#5f64ef;
+            --shadow:0 1px 2px rgba(0,0,0,.08);
+            --radius:18px;
+        }
+
+        *{
+            box-sizing:border-box;
+        }
+
+        body{
+            margin:0;
+            font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
+            background:var(--bg);
+            color:var(--text);
+        }
+
+        h1{
+            font-size:22px;
+            margin:0;
+        }
+
+        table{
+            width:100%;
+            border-collapse:collapse;
+        }
+
+        th, td{
+            border-bottom:1px solid var(--border);
+            text-align:left;
+            padding:8px 6px;
+            font-size:14px;
+        }
+
+        th{
+            position:sticky;
+            top:0;
+            background:var(--subtle);
+        }
+
+        label{
+            display:block;
+            margin:10px 0 6px 0;
+            font-size:14px;
+            color:#333;
+        }
+
+        input{
+            width:100%;
+            padding:10px 12px;
+            border:1px solid var(--border);
+            border-radius:12px;
+            font-size:15px;
+        }
+
+        .container{
+            max-width:1050px;
+            margin:28px auto;
+            padding:0 16px;
+        }
+
+        .topbar{
+            display:flex;
+            justify-content:space-between;
+            align-items:center;
+            margin-bottom:16px;
+            gap:12px;
+            flex-wrap:wrap;
+        }
+
+        .grid{
+            display:grid;
+            grid-template-columns:1fr 1fr;
+            gap:16px;
+        }
+
+        .card{
+            border:1px solid var(--border);
+            border-radius:var(--radius);
+            box-shadow:var(--shadow);
+            padding:18px;
+            background:var(--panel);
+        }
+
+        .card h2{
+            font-size:18px;
+            margin:0 0 10px 0;
+        }
+
+        .row{
+            display:flex;
+            gap:10px;
+        }
+
+        .row > div{
+            flex:1;
+        }
+
+        .actions{
+            margin-top:12px;
+            display:flex;
+            gap:10px;
+            flex-wrap:wrap;
+        }
+
+        .btn{
+            border:1px solid var(--border);
+            background:var(--panel);
+            padding:10px 12px;
+            border-radius:12px;
+            cursor:pointer;
+            box-shadow:var(--shadow);
+        }
+
+        .btn.primary{
+            background:var(--accent);
+            border-color:var(--accent);
+            color:#fff;
+        }
+
+        .msg{
+            margin-top:10px;
+            min-height:20px;
+            color:var(--muted);
+            white-space:pre-wrap;
+        }
+
+        .msg.ok{
+            color:#0a7a2f;
+        }
+
+        .msg.bad{
+            color:#b00020;
+        }
+
+        .meta{
+            background:var(--subtle);
+            border:1px solid var(--border);
+            border-radius:12px;
+            padding:12px;
+            max-height:520px;
+            overflow:auto;
+        }
+
+        .tableTitle{
+            font-weight:700;
+            margin:10px 0 6px 0;
+        }
+
+        @media(max-width:900px){
+            .grid{
+                grid-template-columns:1fr;
+            }
+        }
+    </style>
+</head>
+
+<body>
+<div class="container">
+    <div class="topbar">
+        <h1>Employee Dashboard</h1>
+        <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
+            <span id="employee_name" style="color:var(--muted);"></span>
+            <button id="logout_btn" class="btn">Logout</button>
+        </div>
+    </div>
+
+    <div class="grid">
+        <div class="card">
+            <h2>Add Star</h2>
+            <form id="add_star_form">
+                <label>Star name (required)</label>
+                <input name="name" placeholder="e.g., Keanu Reeves" required />
+
+                <label>Birth year (optional)</label>
+                <input name="birthYear" placeholder="e.g., 1964" inputmode="numeric" />
+
+                <div class="actions">
+                    <button type="submit" class="btn primary">Insert Star</button>
+                </div>
+                <div id="add_star_msg" class="msg"></div>
+            </form>
+        </div>
+
+        <div class="card">
+            <h2>Add Movie (via Stored Procedure)</h2>
+            <form id="add_movie_form">
+                <label>Title (required)</label>
+                <input name="title" placeholder="Movie title" required />
+
+                <div class="row">
+                    <div>
+                        <label>Year (required)</label>
+                        <input name="year" placeholder="2026" inputmode="numeric" required />
+                    </div>
+                    <div>
+                        <label>Director (required)</label>
+                        <input name="director" placeholder="Director" required />
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div>
+                        <label>Star name (required)</label>
+                        <input name="star" placeholder="Star (new or existing)" required />
+                    </div>
+                    <div>
+                        <label>Genre name (required)</label>
+                        <input name="genre" placeholder="Genre (new or existing)" required />
+                    </div>
+                </div>
+
+                <div class="actions">
+                    <button type="submit" class="btn primary">Add Movie</button>
+                </div>
+                <div id="add_movie_msg" class="msg"></div>
+            </form>
+        </div>
+
+        <div class="card" style="grid-column:1/-1;">
+            <h2>Database Metadata</h2>
+            <div class="actions">
+                <button id="refresh_meta" class="btn">Refresh</button>
+            </div>
+            <div id="meta_msg" class="msg"></div>
+            <div id="meta_box" class="meta"></div>
+        </div>
+    </div>
+</div>
+
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+<script src="dashboard.js"></script>
+</body>
+</html>

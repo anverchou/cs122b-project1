@@ -2,6 +2,12 @@ CREATE DATABASE moviedb;
 
 USE moviedb;
 
+CREATE TABLE IF NOT EXISTS employees (
+    email VARCHAR(50) PRIMARY KEY,
+    password VARCHAR(20) NOT NULL,
+    fullname VARCHAR(100)
+);
+
 CREATE TABLE IF NOT EXISTS movie_prices (
     movieId VARCHAR(10) PRIMARY KEY,
     price DECIMAL(10,2) NOT NULL
@@ -63,7 +69,7 @@ CREATE TABLE IF NOT EXISTS customers(
     ccId varchar(20) not null,
     address varchar(200) not null,
     email varchar(50) not null,
-    password varchar(20) not null,
+    password varchar(128) not null,
     PRIMARY KEY (id),
     FOREIGN KEY (ccId) REFERENCES creditcards(id)
 );

@@ -5,6 +5,7 @@ import jakarta.servlet.http.HttpServletResponse;
 
 import java.io.IOException;
 import java.sql.*;
+import org.jasypt.util.password.StrongPasswordEncryptor;
 
 /*
  * Handles user login
@@ -79,7 +80,19 @@ public class LoginServlet extends HttpServlet {
                 }
 
                 // 2) Validate password
-                if (dbPassword == null || !dbPassword.equals(password)) {
+                // Store encrypted passwords in customer table
+                // Compare the user-provided plain text password against the encrypted password.
+                boolean passwordOk = false;
+                if (dbPassword != null) {
+                    passwordOk = new StrongPasswordEncryptor().checkPassword(password, dbPassword);
+
+                    if (!passwordOk && dbPassword.equals(password)) {
+                        passwordOk = true;
+                    }
+                }
+
+                // Incorrect password
+                if (!passwordOk) {
                     response.getWriter().write("{\"status\":\"fail\",\"message\":\"incorrect password\"}");
                     return;
                 }
