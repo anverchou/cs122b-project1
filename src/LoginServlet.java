@@ -23,11 +23,16 @@ public class LoginServlet extends HttpServlet {
      * 5) If match -> set session attribute "user" and return success JSON.
      */
 
+    // Keep defaults, but allow env vars to override (handy on AWS)
+    private static final String DEFAULT_DB_URL = "jdbc:mysql://localhost:3306/moviedb";
+    private static final String DEFAULT_DB_USER = "mytestuser";
+    private static final String DEFAULT_DB_PASS = "password";
+
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws IOException {
-        String loginUser = "mytestuser";
-        String loginPasswd = "password";
-        String loginUrl = "jdbc:mysql://localhost:3306/moviedb";
+        String loginUser = envOrDefault("DB_USER", DEFAULT_DB_USER);
+        String loginPasswd = envOrDefault("DB_PASSWORD", DEFAULT_DB_PASS);
+        String loginUrl = envOrDefault("DB_URL", DEFAULT_DB_URL);
 
         response.setContentType("application/json");
         response.setCharacterEncoding("UTF-8");
@@ -80,14 +85,20 @@ public class LoginServlet extends HttpServlet {
                 }
 
                 // 2) Validate password
-                // Store encrypted passwords in customer table
-                // Compare the user-provided plain text password against the encrypted password.
+                StrongPasswordEncryptor encryptor = new StrongPasswordEncryptor();
                 boolean passwordOk = false;
+                boolean plaintextMatched = false;
+
                 if (dbPassword != null) {
-                    passwordOk = new StrongPasswordEncryptor().checkPassword(password, dbPassword);
+                    try {
+                        passwordOk = encryptor.checkPassword(password, dbPassword);
+                    } catch (Exception ignored) {
+                        passwordOk = false;
+                    }
 
                     if (!passwordOk && dbPassword.equals(password)) {
                         passwordOk = true;
+                        plaintextMatched = true;
                     }
                 }
 
@@ -95,6 +106,15 @@ public class LoginServlet extends HttpServlet {
                 if (!passwordOk) {
                     response.getWriter().write("{\"status\":\"fail\",\"message\":\"incorrect password\"}");
                     return;
+                }
+
+                if (plaintextMatched) {
+                    String encrypted = encryptor.encryptPassword(password);
+                    try (PreparedStatement ups = conn.prepareStatement("UPDATE customers SET password = ? WHERE id = ?")) {
+                        ups.setString(1, encrypted);
+                        ups.setInt(2, customerId);
+                        ups.executeUpdate();
+                    }
                 }
 
                 // 3) Successful login
@@ -106,12 +126,21 @@ public class LoginServlet extends HttpServlet {
         } catch (Exception e) {
             request.getServletContext().log("Login error: ", e);
             response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
-            response.getWriter().write("{\"status\":\"fail\",\"message\":\"Exception: " + escapeJson(e.getMessage()) + "\"}");
+
+            String msg = e.getMessage();
+            if (msg == null || msg.isBlank()) msg = e.getClass().getSimpleName();
+
+            response.getWriter().write("{\"status\":\"fail\",\"message\":\"Exception: " + escapeJson(msg) + "\"}");
         }
+    }
+
+    private static String envOrDefault(String key, String def) {
+        String v = System.getenv(key);
+        return (v == null || v.isBlank()) ? def : v;
     }
 
     private static String escapeJson(String s) {
         if (s == null) return "";
-        return s.replace("\\", "\\\\").replace("\"", "\\\"");
+        return s.replace("\\", "\\\\").replace("\"", "\\");
     }
 }

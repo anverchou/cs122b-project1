@@ -35,7 +35,7 @@ $(function () {
         $.ajax(ctx + "/api/employee-login", {
             method: "POST",
             dataType: "json",
-            data: form.serialize(), // includes g-recaptcha-response
+            data: form.serialize(),
             success: function (res) {
                 if (res.status === "success") {
                     window.location.replace(ctx + "/_dashboard");

@@ -53,8 +53,6 @@ public class UpdateEmployeePassword {
                         }
                         updatePs.executeBatch();
                     }
-
-                    System.out.println("Finished. Updated " + count + " employee password(s).");
                 }
             }
         }

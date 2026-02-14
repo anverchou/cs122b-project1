@@ -28,14 +28,31 @@ function submitLoginForm(e) {
         success: (res) => {
             if (res.status === "success") {
                 window.location.replace("main.html");
-            } else {
-                $("#login_error_message").text(res.message || "Login failed");
+                return;
+            }
+
+            $("#login_error_message").text(res.message || "Login failed");
+
+            if (typeof grecaptcha !== "undefined") {
+                grecaptcha.reset();
             }
         },
         // Not success when HTTP is not 2xx
         error: (xhr) => {
             console.log("Login error:", xhr.status, xhr.responseText);
-            $("#login_error_message").text(`Login request failed (HTTP ${xhr.status})`);
+
+            let msg = `Login request failed (HTTP ${xhr.status})`;
+            try {
+                const j = JSON.parse(xhr.responseText);
+                if (j && j.message) msg = j.message;
+            } catch (e) {}
+
+            $("#login_error_message").text(msg);
+
+            // Reset reCAPTCHA
+            if (typeof grecaptcha !== "undefined") {
+                grecaptcha.reset();
+            }
         }
     });
 }
