@@ -10,16 +10,11 @@ public class VerifyPassword {
      *  4) Query for the stored encrypted password by email.
      *  5) If no row found -> return false.
      */
- public static void main(String[] args) throws Exception {
-        System.out.println(verifyCredentials("a@email.com", "a2"));
-        System.out.println(verifyCredentials("a@email.com", "a3"));
-    }
-
     private static boolean verifyCredentials(String email, String password) throws Exception {
 
         String loginUrl = envOrDefault("DB_URL", "jdbc:mysql://localhost:3306/moviedb");
-        String loginUser = envOrDefault("DB_USER", "root");
-        String loginPasswd = envOrDefault("DB_PASSWORD", "Teehee1324!");
+        String loginUser = envOrDefault("DB_USER", "mytestuser");
+        String loginPasswd = envOrDefault("DB_PASSWORD", "root");
 
         Class.forName("com.mysql.cj.jdbc.Driver");
 

@@ -15,8 +15,8 @@ public class UpdateSecurePassword {
     public static void main(String[] args) throws Exception {
 
         String loginUrl = envOrDefault("DB_URL", "jdbc:mysql://localhost:3306/moviedb");
-        String loginUser = envOrDefault("DB_USER", "root");
-        String loginPasswd = envOrDefault("DB_PASSWORD", "Teehee1324!");
+        String loginUser = envOrDefault("DB_USER", "mytestuser");
+        String loginPasswd = envOrDefault("DB_PASSWORD", "password");
 
         Class.forName("com.mysql.cj.jdbc.Driver");
 
