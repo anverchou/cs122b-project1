@@ -184,8 +184,10 @@
             <h2>Add Star</h2>
             <form id="add_star_form">
                 <label>Star name</label>
+                <input name="name" required />
 
                 <label>Birth year</label>
+                <input name="birthYear" inputmode="numeric" />
 
                 <div class="actions">
                     <button type="submit" class="btn primary">Insert Star</button>
@@ -198,22 +200,27 @@
             <h2>Add Movie</h2>
             <form id="add_movie_form">
                 <label>Title</label>
+                <input name="title" required />
 
                 <div class="row">
                     <div>
                         <label>Year</label>
+                        <input name="year" inputmode="numeric" required />
                     </div>
                     <div>
                         <label>Director</label>
+                        <input name="director" required />
                     </div>
                 </div>
 
                 <div class="row">
                     <div>
                         <label>Star name</label>
+                        <input name="star" required />
                     </div>
                     <div>
                         <label>Genre name</label>
+                        <input name="genre" required />
                     </div>
                 </div>
 
