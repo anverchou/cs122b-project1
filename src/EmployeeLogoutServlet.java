@@ -19,7 +19,6 @@ public class EmployeeLogoutServlet extends HttpServlet {
         request.getSession().removeAttribute("employee");
         request.getSession().removeAttribute("employee_name");
 
-        // Success
         response.getWriter().write("{\"status\":\"success\",\"message\":\"logged out\"}");
     }
 }

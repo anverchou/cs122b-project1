@@ -23,8 +23,8 @@ public class DashboardMetadataServlet extends HttpServlet {
      */
 
     private static final String DEFAULT_DB_URL = "jdbc:mysql://localhost:3306/moviedb";
-    private static final String DEFAULT_DB_USER = "root";
-    private static final String DEFAULT_DB_PASS = "Teehee1324!";
+    private static final String DEFAULT_DB_USER = "mytestuser";
+    private static final String DEFAULT_DB_PASS = "password";
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws IOException {

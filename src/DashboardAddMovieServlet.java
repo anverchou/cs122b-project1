@@ -16,8 +16,8 @@ import java.sql.*;
 @WebServlet(name = "DashboardAddMovieServlet", urlPatterns = "/api/dashboard/add-movie")
 public class DashboardAddMovieServlet extends HttpServlet {
     private static final String DEFAULT_DB_URL = "jdbc:mysql://localhost:3306/moviedb";
-    private static final String DEFAULT_DB_USER = "root";
-    private static final String DEFAULT_DB_PASS = "Teehee1324!";
+    private static final String DEFAULT_DB_USER = "mytestuser";
+    private static final String DEFAULT_DB_PASS = "password";
 
     /**
      * Handles POST requests to add a movie using the stored procedure add_movie.
