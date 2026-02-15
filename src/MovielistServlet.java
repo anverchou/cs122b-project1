@@ -53,8 +53,19 @@ public class MovielistServlet extends HttpServlet {
             List<Object> params = new ArrayList<>();
 
             if (title != null) {
-                where.add("LOWER(m.title) LIKE CONCAT('%', LOWER(?), '%')");
-                params.add(title);
+                // Task 7 - Full-text search on movie title.
+                //
+                // Requirement: If the query has multiple keywords, each is treated as a prefix.
+                // Example: "good u" => match titles with a word starting with "good" AND
+                // a word starting with "u".
+                //
+                // Implementation notes:
+                //  - For tokens length >= 3, we use MySQL FULLTEXT boolean mode:
+                //      MATCH(title) AGAINST ('+good* +unc*' IN BOOLEAN MODE)
+                //    The '+' enforces AND semantics, and '*' enables prefix search.
+                //  - For short tokens (< 3), FULLTEXT won't match on default MySQL settings.
+                //    We add a REGEXP word-prefix filter as a fallback.
+                addFullTextTitleFilter(where, params, title);
             }
 
             if (director != null) {
@@ -478,6 +489,58 @@ public class MovielistServlet extends HttpServlet {
             else ps.setString(idx++, String.valueOf(p));
         }
         return idx;
+    }
+
+    // Full-text filter
+    private static void addFullTextTitleFilter(List<String> where, List<Object> params, String rawQuery) {
+        if (rawQuery == null) return;
+
+        List<String> tokens = tokenizeQuery(rawQuery);
+        if (tokens.isEmpty()) return;
+
+        StringBuilder booleanQuery = new StringBuilder();
+        List<String> shortTokenRegex = new ArrayList<>();
+
+        for (String tok : tokens) {
+            if (tok.length() >= 3) {
+                booleanQuery.append('+').append(tok).append('*').append(' ');
+            } else {
+                // Word-prefix
+                shortTokenRegex.add("(^|[^0-9a-z])" + tok);
+            }
+        }
+
+        // Fulltext match
+        String bq = booleanQuery.toString().trim();
+        if (!bq.isEmpty()) {
+            where.add("MATCH(m.title) AGAINST (? IN BOOLEAN MODE)");
+            params.add(bq);
+        }
+
+        for (String pattern : shortTokenRegex) {
+            where.add("LOWER(m.title) REGEXP ?");
+            params.add(pattern);
+        }
+    }
+
+    // Tokenize a user's query
+    private static List<String> tokenizeQuery(String raw) {
+        String q = raw == null ? "" : raw.trim().toLowerCase(Locale.ROOT);
+        if (q.isEmpty()) return Collections.emptyList();
+
+        String[] parts = q.split("\\s+");
+        ArrayList<String> out = new ArrayList<>();
+        for (String p : parts) {
+            if (p == null) continue;
+
+            String cleaned = p.replaceAll("[^a-z0-9]", "");
+            if (cleaned.isEmpty()) continue;
+
+            out.add(cleaned);
+
+            if (out.size() >= 10) break;
+        }
+        return out;
     }
 
     private static int parsePositiveInt(String s, int def) {

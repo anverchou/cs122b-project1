@@ -17,7 +17,8 @@ CREATE TABLE IF NOT EXISTS movies(
 	id varchar(10) primary key,
     title varchar(100) not null,
     year integer not null,
-    director varchar(100) not null
+    director varchar(100) not null,
+    FULLTEXT KEY ft_title (title)
 );
 
 CREATE TABLE IF NOT EXISTS stars(
