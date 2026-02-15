@@ -15,11 +15,38 @@ function getStarIdFromURL() {
     return params.get("id");
 }
 
-// Render the star's movie list from container
-function renderMovies(moviesStr) {
+// Render the star's movie list
+function renderMovies(moviesVal) {
     const wrap = document.getElementById("movie_chips");
     if (!wrap) return;
     wrap.innerHTML = "";
+
+    if (Array.isArray(moviesVal)) {
+        if (moviesVal.length === 0) {
+            wrap.innerHTML = `<span class="chip">N/A</span>`;
+            return;
+        }
+
+        moviesVal.forEach(m => {
+            const movieId = String(m?.id ?? "").trim();
+            const movieTitle = String(m?.title ?? m?.id ?? "N/A").trim();
+
+            if (!movieId) {
+                wrap.insertAdjacentHTML("beforeend", `<span class="chip">${esc(movieTitle)}</span>`);
+                return;
+            }
+
+            wrap.insertAdjacentHTML(
+                "beforeend",
+                `<a class="chip" href="singlemovie.html?id=${encodeURIComponent(movieId)}">${esc(movieTitle)}</a>`
+            );
+        });
+
+        if (!wrap.children.length) wrap.innerHTML = `<span class="chip">N/A</span>`;
+        return;
+    }
+
+    const moviesStr = String(moviesVal ?? "");
 
     if (!moviesStr || moviesStr.trim() === "" || moviesStr === "N/A") {
         wrap.innerHTML = `<span class="chip">N/A</span>`;
