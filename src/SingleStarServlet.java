@@ -24,13 +24,14 @@ public class SingleStarServlet extends HttpServlet {
 
         response.setContentType("application/json");
         response.setCharacterEncoding("UTF-8");
+
         PrintWriter out = response.getWriter();
 
         // Read and validate
         String starId = request.getParameter("id");
         if (starId == null || starId.trim().isEmpty()) {
             response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-            out.print("{\"error\":\"Missing star id (expected ?id=...)\"}");
+            out.print("{\"status\":\"fail\",\"message\":\"Missing star id (expected ?id=...)\"}");
             out.close();
             return;
         }
@@ -51,57 +52,62 @@ public class SingleStarServlet extends HttpServlet {
                     try (ResultSet rs = ps.executeQuery()) {
                         if (!rs.next()) {
                             response.setStatus(HttpServletResponse.SC_NOT_FOUND);
-                            out.print("{\"error\":\"Star not found\"}");
-                            return;
+                            out.print("{\"status\":\"fail\",\"message\":\"Star not found\"}");
+                            return; // finally will close writer
                         }
                         name = rs.getString("name");
-                        birthYear = (Integer) rs.getObject("birthYear"); // may be null
+                        birthYear = (Integer) rs.getObject("birthYear");
                     }
                 }
 
                 // 2) Movies the star acted in
-                // Requirement: sorted by year DESC then title ASC
                 String moviesQuery =
-                        "SELECT DISTINCT m.id, m.title " +
+                        "SELECT DISTINCT m.id, m.title, m.year " +
                                 "FROM stars_in_movies sim " +
                                 "JOIN movies m ON m.id = sim.movieId " +
                                 "WHERE sim.starId = ? " +
                                 "ORDER BY m.year DESC, m.title ASC";
 
-                StringBuilder moviesSb = new StringBuilder();
-                try (PreparedStatement ps = connection.prepareStatement(moviesQuery)) {
-                    ps.setString(1, starId);
-                    try (ResultSet rs = ps.executeQuery()) {
-                        boolean first = true;
-                        while (rs.next()) {
-                            if (!first) moviesSb.append(", ");
-                            first = false;
-                            String mid = rs.getString("id");
-                            String title = rs.getString("title");
-                            moviesSb.append(mid).append(":").append(title);
-                        }
-                    }
-                }
-
-                String movies = moviesSb.length() == 0 ? "N/A" : moviesSb.toString();
-
                 // 3) JSON response
                 out.print("{");
+                out.print("\"status\":\"success\",");
                 out.print("\"id\":\"" + escapeJson(starId) + "\",");
                 out.print("\"name\":\"" + escapeJson(name) + "\",");
 
-                // birthYear should be avnumber or null
                 out.print("\"birthYear\":" + (birthYear == null ? "null" : birthYear) + ",");
 
-                out.print("\"movies\":\"" + escapeJson(movies) + "\"");
+                out.print("\"movies\":[");
+                boolean first = true;
+                try (PreparedStatement ps = connection.prepareStatement(moviesQuery)) {
+                    ps.setString(1, starId);
+                    try (ResultSet rs = ps.executeQuery()) {
+                        while (rs.next()) {
+                            if (!first) out.print(",");
+                            first = false;
+
+                            String mid = rs.getString("id");
+                            String title = rs.getString("title");
+
+                            out.print("{");
+                            out.print("\"id\":\"" + escapeJson(mid) + "\",");
+                            out.print("\"title\":\"" + escapeJson(title) + "\"");
+                            out.print("}");
+                        }
+                    }
+                }
+                out.print("]");
+
                 out.print("}");
             }
 
-            // Debugging
         } catch (Exception e) {
             request.getServletContext().log("SingleStarServlet error: ", e);
+
+            String msg = e.getMessage();
+            if (msg == null || msg.isBlank()) msg = e.getClass().getSimpleName();
+
             response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
-            out.print("{\"error\":\"Exception in doGet: " + escapeJson(e.getMessage()) + "\"}");
+            out.print("{\"status\":\"fail\",\"message\":\"Exception in doGet: " + escapeJson(msg) + "\"}");
         } finally {
             out.close();
         }
