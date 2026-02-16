@@ -1,43 +1,26 @@
-# CS122B Project2 - Anver Chou
+# CS122B Project3 - Anver Chou
 
-Youtube Demo Link - [https://youtu.be/ibmsN3zUKE8](https://youtu.be/bUtyGxtPPrs)
+Youtube Demo Link - [[https://youtu.be/ibmsN3zUKE8]([https://youtu.be/bUtyGxtPPrs](https://youtu.be/oJCZjePA_fM))
+](https://youtu.be/oJCZjePA_fM)
 
-LIKE/ILIKE Predicate - Located in MovielistServlet
-(DID NOT USE ILIKE)
+Files that use Prepared Statement:
+- src/LoginServlet.java
+- src/MovielistServlet.java
+- src/SingleMovieServlet.java
+- src/SingleStarServlet.java
+- src/CartServlet.java
+- src/PlaceOrderServlet.java
+- src/GenresServlet.java
+- src/DashboardAddStarServlet.java
+- src/DashboardMetadataServlet.java
+- src/EmployeeLoginServlet.java
+- src/CsvDataLoader.java
+- src/VerifyPassword.java
+- src/UpdateSecurePassword.java
 
-With SQL LIKE, substring matching was implemented in MovielistServlet. 
+1) In memory caching to avoid per-row existence checks. 
+Preloads movies, stars, and genres into HashMaps once caching loading begins and then deduplicated memory. This makes it faster by removing thousdands of trips.
+2) Batch inserts 
+By creating and utilizing batch inserts, the network round trips are drastically reduced to allow MySQL execut bigger insert batches efficiently. 
 
-// Title substring match
-if (title != null) {
-    where.add("LOWER(m.title) LIKE CONCAT('%', LOWER(?), '%')");
-    params.add(title);
-}
-
-// Director substring match
-if (director != null) {
-    where.add("LOWER(m.director) LIKE CONCAT('%', LOWER(?), '%')");
-    params.add(director);
-}
-
-// Star name substring match
-if (star != null) {
-    where.add(
-        "EXISTS ("
-      + "  SELECT 1 "
-      + "  FROM stars_in_movies sim "
-      + "  JOIN stars s ON s.id = sim.starId "
-      + "  WHERE sim.movieId = m.id "
-      + "    AND LOWER(s.name) LIKE CONCAT('%', LOWER(?), '%')"
-      + ")"
-    );
-    params.add(star);
-}
-
-// Starts with browse (for prefix)
-where.add("LOWER(m.title) LIKE CONCAT(LOWER(?), '%')");
-params.add(ch);
-
-
-
-
-          
+Inconsitency Report file in repo 
