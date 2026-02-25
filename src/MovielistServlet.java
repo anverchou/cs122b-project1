@@ -7,9 +7,26 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.sql.*;
 import java.util.*;
+import jakarta.servlet.ServletConfig;
+import jakarta.servlet.ServletException;
+import javax.naming.InitialContext;
+import javax.naming.NamingException;
+import javax.sql.DataSource;
 
 @WebServlet("/movielist")
 public class MovielistServlet extends HttpServlet {
+    private DataSource dataSource;
+
+    @Override
+    public void init(ServletConfig config) throws ServletException {
+        super.init(config);
+        try {
+            dataSource = (DataSource) new InitialContext().lookup("java:comp/env/jdbc/moviedb");
+        } catch (NamingException e) {
+            throw new ServletException("Cannot retrieve java:comp/env/jdbc/moviedb", e);
+        }
+    }
+
 
     // Session key used to store the last Movie List
     private static final String STATE_KEY = "movielist_state";
@@ -20,16 +37,12 @@ public class MovielistServlet extends HttpServlet {
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws IOException {
-        String loginUser = "mytestuser";
-        String loginPasswd = "password";
-        String loginUrl = "jdbc:mysql://localhost:3306/moviedb";
 
         response.setContentType("application/json");
         response.setCharacterEncoding("UTF-8");
         PrintWriter out = response.getWriter();
 
         try {
-            Class.forName("com.mysql.cj.jdbc.Driver");
 
             // 1) Resolve effective state
             Map<String, String> effective = resolveState(request);
@@ -116,7 +129,7 @@ public class MovielistServlet extends HttpServlet {
 
             // 3) Query total count
             int total;
-            try (Connection conn = DriverManager.getConnection(loginUrl, loginUser, loginPasswd)) {
+            try (Connection conn = dataSource.getConnection()) {
                 String countSql =
                         "SELECT COUNT(DISTINCT m.id) AS cnt " +
                                 "FROM movies m " +

@@ -10,16 +10,28 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.sql.*;
 import java.util.*;
+import jakarta.servlet.ServletConfig;
+import jakarta.servlet.ServletException;
+import javax.naming.InitialContext;
+import javax.naming.NamingException;
+import javax.sql.DataSource;
 
 // Create movie price on demand and assign price to each movieId when added to cart
 @WebServlet(name = "CartServlet", urlPatterns = "/api/cart")
 public class CartServlet extends HttpServlet {
+    private DataSource dataSource;
+
+    @Override
+    public void init(ServletConfig config) throws ServletException {
+        super.init(config);
+        try {
+            dataSource = (DataSource) new InitialContext().lookup("java:comp/env/jdbc/moviedb");
+        } catch (NamingException e) {
+            throw new ServletException("Cannot retrieve java:comp/env/jdbc/moviedb", e);
+        }
+    }
 
     private static final String CART_KEY = "shopping_cart";
-
-    private static final String loginUser = "mytestuser";
-    private static final String loginPasswd = "password";
-    private static final String loginUrl = "jdbc:mysql://localhost:3306/moviedb";
 
     // Create price table for movies
     private static final String PRICE_TABLE_SQL =
@@ -186,7 +198,7 @@ public class CartServlet extends HttpServlet {
                 }
 
                 // fetch title and price
-                try (Connection conn = DriverManager.getConnection(loginUrl, loginUser, loginPasswd)) {
+                try (Connection conn = dataSource.getConnection()) {
                     ensurePriceTable(conn);
 
                     // Validate the existence of movie and title

@@ -5,6 +5,11 @@ import jakarta.servlet.http.HttpServletResponse;
 
 import java.io.IOException;
 import java.sql.*;
+import jakarta.servlet.ServletConfig;
+import jakarta.servlet.ServletException;
+import javax.naming.InitialContext;
+import javax.naming.NamingException;
+import javax.sql.DataSource;
 
 /**
  * Dashboard operation: Insert a new star.
@@ -13,6 +18,18 @@ import java.sql.*;
  */
 @WebServlet(name = "DashboardAddStarServlet", urlPatterns = "/api/dashboard/add-star")
 public class DashboardAddStarServlet extends HttpServlet {
+    private DataSource dataSource;
+
+    @Override
+    public void init(ServletConfig config) throws ServletException {
+        super.init(config);
+        try {
+            dataSource = (DataSource) new InitialContext().lookup("java:comp/env/jdbc/moviedb");
+        } catch (NamingException e) {
+            throw new ServletException("Cannot retrieve java:comp/env/jdbc/moviedb", e);
+        }
+    }
+
     /**
      * Handles POST requests to insert a new star.
      *
@@ -25,10 +42,6 @@ public class DashboardAddStarServlet extends HttpServlet {
      *  8) Insert into stars
      *  9) Return JSON
      */
-
-    private static final String DEFAULT_DB_URL = "jdbc:mysql://localhost:3306/moviedb";
-    private static final String DEFAULT_DB_USER = "mytestuser";
-    private static final String DEFAULT_DB_PASS = "password";
 
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws IOException {
@@ -63,12 +76,8 @@ public class DashboardAddStarServlet extends HttpServlet {
         }
 
         try {
-            Class.forName("com.mysql.cj.jdbc.Driver");
 
-            try (Connection conn = DriverManager.getConnection(
-                    envOrDefault("DB_URL", DEFAULT_DB_URL),
-                    envOrDefault("DB_USER", DEFAULT_DB_USER),
-                    envOrDefault("DB_PASSWORD", DEFAULT_DB_PASS))) {
+            try (Connection conn = dataSource.getConnection()) {
 
                 // Duplicate Detection
                 int sameNameAndBirthYear = 0;

@@ -11,24 +11,37 @@ import java.math.RoundingMode;
 import java.sql.*;
 import java.text.SimpleDateFormat;
 import java.util.*;
+import jakarta.servlet.ServletConfig;
+import jakarta.servlet.ServletException;
+import javax.naming.InitialContext;
+import javax.naming.NamingException;
+import javax.sql.DataSource;
 
 @WebServlet(name = "PlaceOrderServlet", urlPatterns = "/api/place-order")
 public class PlaceOrderServlet extends HttpServlet {
- /**
-    * 1) Require a logged-in user
-    * 2) Validates payment info against the `creditcards` table.
-    * 3) Inserts purchase rows into sals
-    * 4) Builds a "last order" summary and stores it in session
-    * 5) Clears the shopping cart in session after a successful checkout.
-  */
+    private DataSource dataSource;
+
+    @Override
+    public void init(ServletConfig config) throws ServletException {
+        super.init(config);
+        try {
+            dataSource = (DataSource) new InitialContext().lookup("java:comp/env/jdbc/moviedb");
+        } catch (NamingException e) {
+            throw new ServletException("Cannot retrieve java:comp/env/jdbc/moviedb", e);
+        }
+    }
+
+    /**
+     * 1) Require a logged-in user
+     * 2) Validates payment info against the `creditcards` table.
+     * 3) Inserts purchase rows into sals
+     * 4) Builds a "last order" summary and stores it in session
+     * 5) Clears the shopping cart in session after a successful checkout.
+     */
 
     // Session keys
     private static final String CART_KEY = "shopping_cart";
     private static final String LAST_ORDER_KEY = "last_order";
-
-    private static final String loginUser = "mytestuser";
-    private static final String loginPasswd = "password";
-    private static final String loginUrl = "jdbc:mysql://localhost:3306/moviedb";
 
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws IOException {
@@ -83,17 +96,7 @@ public class PlaceOrderServlet extends HttpServlet {
             out.close();
             return;
         }
-
-        try {
-            Class.forName("com.mysql.cj.jdbc.Driver");
-        } catch (Exception e) {
-            response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
-            out.print("{\"status\":\"fail\",\"message\":\"JDBC driver not found.\"}");
-            out.close();
-            return;
-        }
-
-        try (Connection conn = DriverManager.getConnection(loginUrl, loginUser, loginPasswd)) {
+        try (Connection conn = dataSource.getConnection()) {
             conn.setAutoCommit(false);
 
             // 1) Validate payment info against creditcards table

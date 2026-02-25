@@ -7,9 +7,26 @@ import java.io.IOException;
 import java.sql.*;
 
 import org.jasypt.util.password.StrongPasswordEncryptor;
+import jakarta.servlet.ServletConfig;
+import jakarta.servlet.ServletException;
+import javax.naming.InitialContext;
+import javax.naming.NamingException;
+import javax.sql.DataSource;
 
 @WebServlet(name = "EmployeeLoginServlet", urlPatterns = "/api/employee-login")
 public class EmployeeLoginServlet extends HttpServlet {
+    private DataSource dataSource;
+
+    @Override
+    public void init(ServletConfig config) throws ServletException {
+        super.init(config);
+        try {
+            dataSource = (DataSource) new InitialContext().lookup("java:comp/env/jdbc/moviedb");
+        } catch (NamingException e) {
+            throw new ServletException("Cannot retrieve java:comp/env/jdbc/moviedb", e);
+        }
+    }
+
 
     /**
      * 1) Set JSON response headers.
@@ -22,10 +39,6 @@ public class EmployeeLoginServlet extends HttpServlet {
      * - set session attributes
      * - return success JSON
      */
-
-    private static final String DEFAULT_DB_URL = "jdbc:mysql://localhost:3306/moviedb";
-    private static final String DEFAULT_DB_USER = "mytestuser";
-    private static final String DEFAULT_DB_PASS = "password";
 
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws IOException {
@@ -57,12 +70,8 @@ public class EmployeeLoginServlet extends HttpServlet {
 
 
         try {
-            Class.forName("com.mysql.cj.jdbc.Driver");
 
-            try (Connection conn = DriverManager.getConnection(
-                    envOrDefault("DB_URL", DEFAULT_DB_URL),
-                    envOrDefault("DB_USER", DEFAULT_DB_USER),
-                    envOrDefault("DB_PASSWORD", DEFAULT_DB_PASS))) {
+            try (Connection conn = dataSource.getConnection()) {
 
                 // Fetch encrypyed password
                 String sql = "SELECT password, fullname FROM employees WHERE email = ?";

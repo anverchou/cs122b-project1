@@ -6,10 +6,28 @@ import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.sql.*;
 import java.util.*;
+import jakarta.servlet.ServletConfig;
+import jakarta.servlet.ServletException;
+import javax.naming.InitialContext;
+import javax.naming.NamingException;
+import javax.sql.DataSource;
+
 
 // Return JSON of up to 10 entries
 @WebServlet(name = "AutocompleteServlet", urlPatterns = "/api/autocomplete")
 public class AutocompleteServlet extends HttpServlet {
+    private DataSource dataSource;
+
+    @Override
+    public void init(ServletConfig config) throws ServletException {
+        super.init(config);
+        try {
+            dataSource = (DataSource) new InitialContext().lookup("java:comp/env/jdbc/moviedb");
+        } catch (NamingException e) {
+            throw new ServletException("Cannot retrieve java:comp/env/jdbc/moviedb", e);
+        }
+    }
+
 
     /**
      * 1) Read and trim parameter
@@ -19,9 +37,6 @@ public class AutocompleteServlet extends HttpServlet {
      */
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws IOException {
-        String loginUser = "mytestuser";
-        String loginPasswd = "password";
-        String loginUrl = "jdbc:mysql://localhost:3306/moviedb";
 
         response.setContentType("application/json");
         response.setCharacterEncoding("UTF-8");
@@ -59,19 +74,15 @@ public class AutocompleteServlet extends HttpServlet {
         List<String> rows = new ArrayList<>();
 
         try {
-            Class.forName("com.mysql.cj.jdbc.Driver");
 
-            try (Connection conn = DriverManager.getConnection(loginUrl, loginUser, loginPasswd);
+            try (Connection conn = dataSource.getConnection();
                  PreparedStatement ps = conn.prepareStatement(sql)) {
                 bindParams(ps, params);
-
                 try (ResultSet rs = ps.executeQuery()) {
                     while (rs.next()) {
                         String id = rs.getString("id");
                         String title = rs.getString("title");
-
-                        rows.add(
-                                "{\"value\":\"" + escapeJson(title) + "\",\"data\":{\"movieId\":\"" + escapeJson(id) + "\"}}"
+                        rows.add("{\"value\":\"" + escapeJson(title) + "\",\"data\":{\"movieId\":\"" + escapeJson(id) + "\"}}"
                         );
                     }
                 }

@@ -7,6 +7,11 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.sql.*;
+import jakarta.servlet.ServletConfig;
+import jakarta.servlet.ServletException;
+import javax.naming.InitialContext;
+import javax.naming.NamingException;
+import javax.sql.DataSource;
 
 /**
  * Dashboard operation: Add a new movie using the stored procedure add_movie.
@@ -15,9 +20,17 @@ import java.sql.*;
  */
 @WebServlet(name = "DashboardAddMovieServlet", urlPatterns = "/api/dashboard/add-movie")
 public class DashboardAddMovieServlet extends HttpServlet {
-    private static final String DEFAULT_DB_URL = "jdbc:mysql://localhost:3306/moviedb";
-    private static final String DEFAULT_DB_USER = "mytestuser";
-    private static final String DEFAULT_DB_PASS = "password";
+    private DataSource dataSource;
+
+    @Override
+    public void init(ServletConfig config) throws ServletException {
+        super.init(config);
+        try {
+            dataSource = (DataSource) new InitialContext().lookup("java:comp/env/jdbc/moviedb");
+        } catch (NamingException e) {
+            throw new ServletException("Cannot retrieve java:comp/env/jdbc/moviedb", e);
+        }
+    }
 
     /**
      * Handles POST requests to add a movie using the stored procedure add_movie.
@@ -29,7 +42,7 @@ public class DashboardAddMovieServlet extends HttpServlet {
      *  6) Collect any intermediate messages produced as result sets.
      *  7) Read out parameter message.
      *  8) Return JSON
-    */
+     */
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws IOException {
 
@@ -62,12 +75,8 @@ public class DashboardAddMovieServlet extends HttpServlet {
         }
 
         try {
-            Class.forName("com.mysql.cj.jdbc.Driver");
 
-            try (Connection conn = DriverManager.getConnection(
-                    envOrDefault("DB_URL", DEFAULT_DB_URL),
-                    envOrDefault("DB_USER", DEFAULT_DB_USER),
-                    envOrDefault("DB_PASSWORD", DEFAULT_DB_PASS))) {
+            try (Connection conn = dataSource.getConnection()) {
 
                 // Call stored procedure
                 try (CallableStatement cs = conn.prepareCall("{CALL add_movie(?, ?, ?, ?, ?, ?)}")) {

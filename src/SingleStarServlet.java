@@ -6,10 +6,27 @@ import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.sql.*;
+import jakarta.servlet.ServletConfig;
+import jakarta.servlet.ServletException;
+import javax.naming.InitialContext;
+import javax.naming.NamingException;
+import javax.sql.DataSource;
 
 // Return information for each single star
 @WebServlet("/singlestar")
 public class SingleStarServlet extends HttpServlet {
+    private DataSource dataSource;
+
+    @Override
+    public void init(ServletConfig config) throws ServletException {
+        super.init(config);
+        try {
+            dataSource = (DataSource) new InitialContext().lookup("java:comp/env/jdbc/moviedb");
+        } catch (NamingException e) {
+            throw new ServletException("Cannot retrieve java:comp/env/jdbc/moviedb", e);
+        }
+    }
+
     /* 1) Read starId from query param
      * 2) Validate it exists
      * 3) Query star core info
@@ -18,9 +35,6 @@ public class SingleStarServlet extends HttpServlet {
      */
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws IOException {
-        String loginUser = "mytestuser";
-        String loginPasswd = "password";
-        String loginUrl = "jdbc:mysql://localhost:3306/moviedb";
 
         response.setContentType("application/json");
         response.setCharacterEncoding("UTF-8");
@@ -37,9 +51,8 @@ public class SingleStarServlet extends HttpServlet {
         }
 
         try {
-            Class.forName("com.mysql.cj.jdbc.Driver");
 
-            try (Connection connection = DriverManager.getConnection(loginUrl, loginUser, loginPasswd)) {
+            try (Connection connection = dataSource.getConnection()) {
 
                 // 1) Star info
                 String starQuery = "SELECT id, name, birthYear FROM stars WHERE id = ?";

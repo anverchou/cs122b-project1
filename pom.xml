@@ -29,7 +29,7 @@
     </dependency>
   </dependencies>
   <build>
-    <finalName>cs122b-project1-star-example</finalName>
+    <finalName>fablix</finalName>
     <sourceDirectory>src</sourceDirectory>
     <plugins>
       <plugin>

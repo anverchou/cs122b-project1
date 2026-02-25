@@ -7,9 +7,26 @@ import java.io.IOException;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
+import jakarta.servlet.ServletConfig;
+import jakarta.servlet.ServletException;
+import javax.naming.InitialContext;
+import javax.naming.NamingException;
+import javax.sql.DataSource;
 
 @WebServlet("/api/genres")
-public class GenresServlet extends HttpServlet {/**
+public class GenresServlet extends HttpServlet {
+    private DataSource dataSource;
+
+    @Override
+    public void init(ServletConfig config) throws ServletException {
+        super.init(config);
+        try {
+            dataSource = (DataSource) new InitialContext().lookup("java:comp/env/jdbc/moviedb");
+        } catch (NamingException e) {
+            throw new ServletException("Cannot retrieve java:comp/env/jdbc/moviedb", e);
+        }
+    }
+    /**
      * Handles GET requests to /api/genres.
      *
      * 1) Configure response headers (JSON + UTF-8).
@@ -20,9 +37,6 @@ public class GenresServlet extends HttpServlet {/**
      */
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws IOException {
-        String loginUser = "mytestuser";
-        String loginPasswd = "password";
-        String loginUrl = "jdbc:mysql://localhost:3306/moviedb";
 
         response.setContentType("application/json");
         response.setCharacterEncoding("UTF-8");
@@ -31,10 +45,7 @@ public class GenresServlet extends HttpServlet {/**
         List<String> rows = new ArrayList<>();
 
         try {
-            Class.forName("com.mysql.cj.jdbc.Driver");
-            try (Connection conn = DriverManager.getConnection(loginUrl, loginUser, loginPasswd);
-                 PreparedStatement ps = conn.prepareStatement("SELECT id, name FROM genres ORDER BY name");
-                 ResultSet rs = ps.executeQuery()) {
+            try (Connection conn = dataSource.getConnection()) {
 
                 // Convert each DB row into a JSON object
                 // {"id" : 1, "name": "Action"}
