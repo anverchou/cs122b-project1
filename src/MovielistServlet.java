@@ -53,24 +53,11 @@ public class MovielistServlet extends HttpServlet {
             List<Object> params = new ArrayList<>();
 
             if (title != null) {
-                // Task 7 - Full-text search on movie title.
-                //
-                // Requirement: If the query has multiple keywords, each is treated as a prefix.
-                // Example: "good u" => match titles with a word starting with "good" AND
-                // a word starting with "u".
-                //
-                // Implementation notes:
-                //  - For tokens length >= 3, we use MySQL FULLTEXT boolean mode:
-                //      MATCH(title) AGAINST ('+good* +unc*' IN BOOLEAN MODE)
-                //    The '+' enforces AND semantics, and '*' enables prefix search.
-                //  - For short tokens (< 3), FULLTEXT won't match on default MySQL settings.
-                //    We add a REGEXP word-prefix filter as a fallback.
-                addFullTextTitleFilter(where, params, title);
+                addTitleSearchFilter(where, params, title);
             }
 
             if (director != null) {
-                where.add("LOWER(m.director) LIKE CONCAT('%', LOWER(?), '%')");
-                params.add(director);
+                where.add(fuzzyLikeEdth("m.director", director, params));
             }
 
             if (yearStr != null) {
@@ -86,16 +73,16 @@ public class MovielistServlet extends HttpServlet {
             }
 
             if (star != null) {
+                String starCond = fuzzyLikeEdth("s.name", star, params);
                 where.add(
                         "EXISTS (" +
                                 "  SELECT 1 " +
                                 "  FROM stars_in_movies sim " +
                                 "  JOIN stars s ON s.id = sim.starId " +
                                 "  WHERE sim.movieId = m.id " +
-                                "    AND LOWER(s.name) LIKE CONCAT('%', LOWER(?), '%')" +
+                                "    AND " + starCond +
                                 ")"
                 );
-                params.add(star);
             }
 
             if (genreIdStr != null) {
@@ -108,7 +95,6 @@ public class MovielistServlet extends HttpServlet {
                                     "  WHERE gim.movieId = m.id AND gim.genreId = ?" +
                                     ")"
                     );
-                    // Debug
                     params.add(gid);
                 } catch (NumberFormatException nfe) {
                     writeEmpty(out, effective, page, pageSize, sortPrimary, titleDir, ratingDir);
@@ -185,7 +171,6 @@ public class MovielistServlet extends HttpServlet {
                 sql.append(whereSql);
 
                 // Sort by title/rating or rating/title
-                // ascending or descending order.
                 sql.append(" ORDER BY ");
                 if ("title".equals(sortPrimary)) {
                     sql.append("LOWER(m.title) ").append(titleDir).append(", ");
@@ -299,7 +284,7 @@ public class MovielistServlet extends HttpServlet {
         }
     }
 
-    // Hlp function
+    // Help function
     private Map<String, String> resolveState(HttpServletRequest request) {
         // Clear session state
         String reset = request.getParameter("reset");
@@ -492,9 +477,32 @@ public class MovielistServlet extends HttpServlet {
     }
 
     // Full-text filter
-    private static void addFullTextTitleFilter(List<String> where, List<Object> params, String rawQuery) {
-        if (rawQuery == null) return;
+    private static void addTitleSearchFilter(List<String> where, List<Object> params, String rawTitle) {
+        if (rawTitle == null) return;
 
+        String q = rawTitle.trim();
+        if (q.isEmpty()) return;
+
+        // Build full text and regex group
+        List<String> ftClauses = new ArrayList<>();
+        List<Object> ftParams = new ArrayList<>();
+        buildFullTextTitleClauses(ftClauses, ftParams, q);
+
+        // Build fuzzy group
+        List<Object> fuzzyParams = new ArrayList<>();
+        String fuzzyGroup = fuzzyLikeEdth("m.title", q, fuzzyParams);
+
+        if (!ftClauses.isEmpty()) {
+            where.add("((" + String.join(" AND ", ftClauses) + ") OR " + fuzzyGroup + ")");
+            params.addAll(ftParams);
+            params.addAll(fuzzyParams);
+        } else {
+            where.add(fuzzyGroup);
+            params.addAll(fuzzyParams);
+        }
+    }
+
+    private static void buildFullTextTitleClauses(List<String> clauses, List<Object> params, String rawQuery) {
         List<String> tokens = tokenizeQuery(rawQuery);
         if (tokens.isEmpty()) return;
 
@@ -505,22 +513,52 @@ public class MovielistServlet extends HttpServlet {
             if (tok.length() >= 3) {
                 booleanQuery.append('+').append(tok).append('*').append(' ');
             } else {
-                // Word-prefix
+                // Prefix fallback for short tokens
                 shortTokenRegex.add("(^|[^0-9a-z])" + tok);
             }
         }
 
-        // Fulltext match
         String bq = booleanQuery.toString().trim();
         if (!bq.isEmpty()) {
-            where.add("MATCH(m.title) AGAINST (? IN BOOLEAN MODE)");
+            clauses.add("MATCH(m.title) AGAINST (? IN BOOLEAN MODE)");
             params.add(bq);
         }
 
         for (String pattern : shortTokenRegex) {
-            where.add("LOWER(m.title) REGEXP ?");
+            clauses.add("LOWER(m.title) REGEXP ?");
             params.add(pattern);
         }
+    }
+
+    // Create a fuzzy predicate
+    private static String fuzzyLikeEdth(String columnExpr, String rawQuery, List<Object> params) {
+        String q = rawQuery == null ? "" : rawQuery.trim();
+
+        StringBuilder sb = new StringBuilder();
+        sb.append("(");
+        sb.append("LOWER(").append(columnExpr).append(") LIKE CONCAT('%', LOWER(?), '%')");
+        params.add(q);
+
+        // edth compares whole strings
+        String compact = q.replaceAll("\\s+", "");
+        if (compact.length() >= 3) {
+            sb.append(" OR edth(LOWER(").append(columnExpr).append("), LOWER(?), ?)");
+            params.add(q);
+            params.add(fuzzyThreshold(compact.length()));
+        }
+
+        sb.append(")");
+        return sb.toString();
+    }
+
+    // Tune edit-distance threshold based on query length.
+    private static int fuzzyThreshold(int compactLen) {
+        if (compactLen <= 0) return 1;
+
+        int th = (compactLen + 3) / 4;
+        if (th < 1) th = 1;
+        if (th > 4) th = 4;
+        return th;
     }
 
     // Tokenize a user's query

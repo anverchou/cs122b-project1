@@ -1,7 +1,3 @@
-/*
-    * - Escapes user/data strings before inserting them into HTML via innerHTML/template strings.
-    * - Prevents HTML injection by converting special characters into HTML entities.
-*/
 function esc(s) {
     return String(s ?? "")
         .replaceAll("&", "&amp;")
@@ -17,7 +13,7 @@ function getContextPath() {
     return i === -1 ? "" : path.substring(0, i);
 }
 
-// Sign out button initalization
+// Sign out button initialization
 function setupLogout() {
     const btn = document.getElementById("logout_btn");
     if (!btn) return;
@@ -42,8 +38,29 @@ function setupSearchForm() {
     const form = document.getElementById("search_form");
     if (!form) return;
 
+    let selectedMovieId = null;
+
+    // Autocomplete handler
+    window.__setSelectedMovieId = (movieId) => {
+        selectedMovieId = movieId || null;
+    };
+
+    // Clear selection if the user edits the title after selecting something
+    const titleInput = document.getElementById("autocomplete");
+    if (titleInput) {
+        titleInput.addEventListener("input", () => {
+            selectedMovieId = null;
+        });
+    }
+
     form.addEventListener("submit", (e) => {
         e.preventDefault();
+
+        // Go to single movie if an auto completed option was selected
+        if (selectedMovieId) {
+            window.location.href = `singlemovie.html?id=${encodeURIComponent(selectedMovieId)}`;
+            return;
+        }
 
         const fd = new FormData(form);
         const params = new URLSearchParams();
@@ -63,6 +80,7 @@ function setupSearchForm() {
                 params.set(k, val);
             }
         }
+
         // Clear old session filters
         params.set("reset", "1");
         params.set("page", "1");
@@ -70,6 +88,97 @@ function setupSearchForm() {
         // If user submits with nothing filled, go to Top 20
         const qs = params.toString();
         window.location.href = qs ? `movielist.html?${qs}` : `movielist.html`;
+    });
+}
+
+// Autocomplete on main title search box
+function setupAutocomplete() {
+    // Autocomplete library requires jQuery
+    if (typeof window.jQuery === "undefined") return;
+
+    const $input = window.jQuery("#autocomplete");
+    if ($input.length === 0) return;
+
+    const CACHE_PREFIX = "ac_suggestions_";
+
+    function cacheKey(q) {
+        return CACHE_PREFIX + String(q || "").trim().toLowerCase();
+    }
+
+    function readCache(q) {
+        try {
+            const raw = sessionStorage.getItem(cacheKey(q));
+            if (!raw) return null;
+            const parsed = JSON.parse(raw);
+            return Array.isArray(parsed) ? parsed : null;
+        } catch (_) {
+            return null;
+        }
+    }
+
+    function writeCache(q, list) {
+        try {
+            sessionStorage.setItem(cacheKey(q), JSON.stringify(list || []));
+        } catch (_) {
+            // Ignore quota errors
+        }
+    }
+
+    $input.autocomplete({
+        minChars: 3,
+        deferRequestBy: 300,
+        lookup: function (query, doneCallback) {
+            // Autocomplete search is completed
+            console.log("Autocomplete search initiated");
+
+            const q = String(query || "").trim();
+            if (q.length < 3) {
+                doneCallback({ suggestions: [] });
+                return;
+            }
+
+            const cached = readCache(q);
+            if (cached) {
+                // Using cached results
+                console.log("Autocomplete using cached results");
+                console.log(cached);
+                doneCallback({ suggestions: cached });
+                return;
+            }
+
+            // Sending AJAX request to the server
+            console.log("Autocomplete sending AJAX request");
+
+            window.jQuery.ajax({
+                method: "GET",
+                url: `${getContextPath()}/api/autocomplete?query=${encodeURIComponent(q)}`,
+                dataType: "json",
+                success: function (data) {
+                    const list = Array.isArray(data) ? data.slice(0, 10) : [];
+                    writeCache(q, list);
+                    console.log(list);
+                    doneCallback({ suggestions: list });
+                },
+                error: function (xhr) {
+                    // If session expired, kick to login.
+                    if (xhr && xhr.status === 401) {
+                        window.location.replace("login.html");
+                        return;
+                    }
+                    doneCallback({ suggestions: [] });
+                }
+            });
+        },
+        onSelect: function (suggestion) {
+            const movieId = suggestion?.data?.movieId;
+            if (!movieId) return;
+
+            if (typeof window.__setSelectedMovieId === "function") {
+                window.__setSelectedMovieId(movieId);
+            }
+            // jump directly to the single movie page
+            window.location.href = `singlemovie.html?id=${encodeURIComponent(movieId)}`;
+        }
     });
 }
 
@@ -82,13 +191,13 @@ async function loadGenres() {
     wrap.innerHTML = `<span class="chip">Loading…</span>`;
     if (hint) hint.textContent = "";
 
-    // Check if user is loggd in
+    // Check if user is logged in
     try {
         const url = `${getContextPath()}/api/genres`;
 
         const res = await fetch(url, { headers: { "Accept": "application/json" } });
 
-        // If not loggd in
+        // If not logged in
         if (res.status === 401) {
             window.location.replace("login.html");
             return;
@@ -142,7 +251,7 @@ async function clearMovielistStateIfRequested() {
         await fetch(`${getContextPath()}/movielist?reset=1`, {
             headers: { "Accept": "application/json" }
         });
-        // Ignore as it will still get cleared
+        // Ignore errors; state will still be cleared on next load path
     } catch (_) {
     }
 
@@ -160,18 +269,18 @@ function renderTitleBrowse() {
     for (let i = 0; i <= 9; i++) chars.push(String(i));
     for (let c = 65; c <= 90; c++) chars.push(String.fromCharCode(c));
     chars.push("*");
-    
+
     wrap.innerHTML = chars
         .map(ch => `<a class="chip" href="movielist.html?startsWith=${encodeURIComponent(ch)}&reset=1">${esc(ch)}</a>`)
         .join("");
 }
 
-
-// Initalize Content
+// Initialize Content
 document.addEventListener("DOMContentLoaded", () => {
     clearMovielistStateIfRequested();
     setupLogout();
     setupSearchForm();
+    setupAutocomplete();
     renderTitleBrowse();
     loadGenres();
 });

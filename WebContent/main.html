@@ -180,6 +180,26 @@
         @media (max-width: 720px){
             .grid{ grid-template-columns:1fr; }
         }
+
+        .autocomplete-suggestions{
+            border:1px solid var(--border);
+            background:var(--panel);
+            border-radius:12px;
+            box-shadow:var(--shadowSoft);
+            overflow:auto;
+            max-height:320px;
+        }
+
+        .autocomplete-suggestion{
+            padding:10px 12px;
+            cursor:pointer;
+            white-space:nowrap;
+            overflow:hidden;
+            text-overflow:ellipsis;
+        }
+        .autocomplete-selected{
+            background:var(--subtle);
+        }
     </style>
 </head>
 
@@ -198,7 +218,7 @@
                 <div class="grid">
                     <div class="field">
                         <label>Title</label>
-                        <input name="title"/>
+                        <input name="title" id="autocomplete" autocomplete="off" />
                     </div>
                     <div class="field">
                         <label>Year</label>
@@ -234,6 +254,8 @@
     </div>
 </div>
 
+<script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.devbridge-autocomplete/1.4.11/jquery.autocomplete.min.js"></script>
 <script src="main.js?v=4"></script>
 </body>
 </html>
