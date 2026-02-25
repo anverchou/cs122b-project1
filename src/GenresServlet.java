@@ -47,12 +47,18 @@ public class GenresServlet extends HttpServlet {
         try {
             try (Connection conn = dataSource.getConnection()) {
 
-                // Convert each DB row into a JSON object
-                // {"id" : 1, "name": "Action"}
-                while (rs.next()) {
-                    int id = rs.getInt("id");
-                    String name = rs.getString("name");
-                    rows.add("{\"id\":" + id + ",\"name\":\"" + escapeJson(name) + "\"}");
+                String sql = "SELECT id, name FROM genres ORDER BY name ASC";
+
+                try (PreparedStatement ps = conn.prepareStatement(sql);
+                     ResultSet rs = ps.executeQuery()) {
+
+                    // Convert each DB row into a JSON object
+                    // {"id" : 1, "name": "Action"}
+                    while (rs.next()) {
+                        int id = rs.getInt("id");
+                        String name = rs.getString("name");
+                        rows.add("{\"id\":" + id + ",\"name\":\"" + escapeJson(name) + "\"}");
+                    }
                 }
             }
             // Write the final JSON array
