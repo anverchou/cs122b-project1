@@ -17,6 +17,17 @@ import javax.sql.DataSource;
 public class MovielistServlet extends HttpServlet {
     private DataSource dataSource;
 
+    // Container to read JDBC results
+    private static class MovieRow {
+        String id;
+        String title;
+        int year;
+        String director;
+        Double rating;
+        String genrePairs;
+        String starPairs;
+    }
+
     @Override
     public void init(ServletConfig config) throws ServletException {
         super.init(config);
@@ -26,7 +37,6 @@ public class MovielistServlet extends HttpServlet {
             throw new ServletException("Cannot retrieve java:comp/env/jdbc/moviedb", e);
         }
     }
-
 
     // Session key used to store the last Movie List
     private static final String STATE_KEY = "movielist_state";
@@ -41,6 +51,7 @@ public class MovielistServlet extends HttpServlet {
         response.setContentType("application/json");
         response.setCharacterEncoding("UTF-8");
         PrintWriter out = response.getWriter();
+        long jdbcNs = 0L;
 
         try {
 
@@ -129,13 +140,20 @@ public class MovielistServlet extends HttpServlet {
 
             // 3) Query total count
             int total;
+
+            // Time getting a connection
+            long tConn = System.nanoTime();
             try (Connection conn = dataSource.getConnection()) {
+                jdbcNs += (System.nanoTime() - tConn);
+
                 String countSql =
                         "SELECT COUNT(DISTINCT m.id) AS cnt " +
                                 "FROM movies m " +
                                 "LEFT JOIN ratings r ON r.movieId = m.id " +
                                 whereSql;
 
+                // Time count JDBC work
+                long tCount = System.nanoTime();
                 try (PreparedStatement cps = conn.prepareStatement(countSql)) {
                     bindParams(cps, params);
                     try (ResultSet crs = cps.executeQuery()) {
@@ -143,6 +161,7 @@ public class MovielistServlet extends HttpServlet {
                         total = crs.getInt("cnt");
                     }
                 }
+                jdbcNs += (System.nanoTime() - tCount);
 
                 // Build main SQL with first-3 genres + first-3 stars
                 StringBuilder sql = new StringBuilder();
@@ -201,10 +220,14 @@ public class MovielistServlet extends HttpServlet {
                 int offset = (page - 1) * pageSize;
 
                 // 5) Execute and stream JSON
+                long tMain = System.nanoTime();
                 try (PreparedStatement ps = conn.prepareStatement(sql.toString())) {
                     int idx = bindParams(ps, params);
                     ps.setInt(idx++, pageSize);
                     ps.setInt(idx, offset);
+
+                    // Prepare/bind time
+                    jdbcNs += (System.nanoTime() - tMain);
 
                     boolean hasPrev = page > 1;
                     boolean hasNext = (page * pageSize) < total;
@@ -231,11 +254,15 @@ public class MovielistServlet extends HttpServlet {
                     out.print("\"movies\":[");
 
                     boolean firstMovie = true;
-                    try (ResultSet rs = ps.executeQuery()) {
-                        while (rs.next()) {
-                            if (!firstMovie) out.print(",");
-                            firstMovie = false;
 
+                    // Time execute
+                    long tExec = System.nanoTime();
+                    try (ResultSet rs = ps.executeQuery()) {
+                        jdbcNs += (System.nanoTime() - tExec);
+
+                        while (rs.next()) {
+
+                            long tRowRead = System.nanoTime();
                             String movieId = rs.getString("id");
                             String t = rs.getString("title");
                             int y = rs.getInt("year");
@@ -246,6 +273,11 @@ public class MovielistServlet extends HttpServlet {
 
                             String genrePairs = rs.getString("genrePairs");
                             String starPairs = rs.getString("starPairs");
+
+                            jdbcNs += (System.nanoTime() - tRowRead);
+
+                            if (!firstMovie) out.print(",");
+                            firstMovie = false;
 
                             out.print("{");
 
@@ -293,6 +325,8 @@ public class MovielistServlet extends HttpServlet {
             out.print(escapeJson(e.getMessage()));
             out.print("\"}");
         } finally {
+            // TJ Filter
+            request.setAttribute("TJ_NANOS", jdbcNs);
             out.close();
         }
     }
