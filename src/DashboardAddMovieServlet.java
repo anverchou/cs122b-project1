@@ -26,9 +26,10 @@ public class DashboardAddMovieServlet extends HttpServlet {
     public void init(ServletConfig config) throws ServletException {
         super.init(config);
         try {
-            dataSource = (DataSource) new InitialContext().lookup("java:comp/env/jdbc/moviedb");
+            // Task 4 (master/slave): stored procedure writes multiple tables, so this servlet must use the WRITE pool
+            dataSource = (DataSource) new InitialContext().lookup("java:comp/env/jdbc/moviedbWrite");
         } catch (NamingException e) {
-            throw new ServletException("Cannot retrieve java:comp/env/jdbc/moviedb", e);
+            throw new ServletException("Cannot retrieve java:comp/env/jdbc/moviedbWrite", e);
         }
     }
 

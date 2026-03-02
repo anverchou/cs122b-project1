@@ -21,12 +21,11 @@ public class EmployeeLoginServlet extends HttpServlet {
     public void init(ServletConfig config) throws ServletException {
         super.init(config);
         try {
-            dataSource = (DataSource) new InitialContext().lookup("java:comp/env/jdbc/moviedb");
+            dataSource = (DataSource) new InitialContext().lookup("java:comp/env/jdbc/moviedbWrite");
         } catch (NamingException e) {
-            throw new ServletException("Cannot retrieve java:comp/env/jdbc/moviedb", e);
+            throw new ServletException("Cannot retrieve java:comp/env/jdbc/moviedbWrite", e);
         }
     }
-
 
     /**
      * 1) Set JSON response headers.
@@ -39,7 +38,6 @@ public class EmployeeLoginServlet extends HttpServlet {
      * - set session attributes
      * - return success JSON
      */
-
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws IOException {
         response.setContentType("application/json");
@@ -67,7 +65,6 @@ public class EmployeeLoginServlet extends HttpServlet {
             );
             return;
         }
-
 
         try {
 
