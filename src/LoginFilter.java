@@ -29,6 +29,9 @@ public class LoginFilter implements Filter {
         customerAllowedSuffixes.add("/movielist");
         customerAllowedSuffixes.add("/singlemovie");
         customerAllowedSuffixes.add("/singlestar");
+        customerAllowedSuffixes.add("/_dashboard");
+        dashboardAllowedSuffixes.add("/dashboard-login.html");
+        dashboardAllowedSuffixes.add("/dashboard-login.js");
 
         dashboardAllowedSuffixes.add("/_dashboard");
         dashboardAllowedSuffixes.add("/dashboard-login.html");
