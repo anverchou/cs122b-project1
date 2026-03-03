@@ -143,7 +143,10 @@ public class MovielistServlet extends HttpServlet {
 
             // Time getting a connection
             long tConn = System.nanoTime();
-            try (Connection conn = dataSource.getConnection()) {
+            try (Connection conn = DriverManager.getConnection(
+                    "jdbc:mysql://localhost:3306/moviedb?autoReconnect=true&allowPublicKeyRetrieval=true&useSSL=false",
+                    "mytestuser",
+                    "password")) {
                 jdbcNs += (System.nanoTime() - tConn);
 
                 String countSql =
