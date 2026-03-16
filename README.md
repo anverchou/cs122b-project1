@@ -1,26 +1,56 @@
-# CS122B Project3 - Anver Chou
+# CS122B Project4 - Anver Chou
 
-Youtube Demo Link - [[https://youtu.be/ibmsN3zUKE8]([https://youtu.be/bUtyGxtPPrs](https://youtu.be/oJCZjePA_fM))
+Youtube Demo Link - [[https://youtu.be/1WZyj0L2GZA]([https://youtu.be/bUtyGxtPPrs](https://youtu.be/oJCZjePA_fM))
 ](https://youtu.be/oJCZjePA_fM)
 
-Files that use Prepared Statement:
-- src/LoginServlet.java
-- src/MovielistServlet.java
-- src/SingleMovieServlet.java
-- src/SingleStarServlet.java
-- src/CartServlet.java
-- src/PlaceOrderServlet.java
-- src/GenresServlet.java
-- src/DashboardAddStarServlet.java
-- src/DashboardMetadataServlet.java
-- src/EmployeeLoginServlet.java
-- src/CsvDataLoader.java
-- src/VerifyPassword.java
-- src/UpdateSecurePassword.java
+Only part 1 of the project is shown in the demo. I was unsuccessful in completing the JMeter demo.
 
-1) In memory caching to avoid per-row existence checks. 
-Preloads movies, stars, and genres into HashMaps once caching loading begins and then deduplicated memory. This makes it faster by removing thousdands of trips.
-2) Batch inserts 
-By creating and utilizing batch inserts, the network round trips are drastically reduced to allow MySQL execut bigger insert batches efficiently. 
+- # Connection Pooling
+    - #### Include the filename/path of all code/configuration files in GitHub of using JDBC Connection Pooling.
+      - WebContent/META-INF/context.xml
+        Define the Tomcat JDBC pool Resources to enable prepared statement caching
+      - WebContent/WEB-INF/web.xml
+        Declare entries so servlets can look up pool
 
-Inconsitency Report file in repo 
+- All services that access MySQL and JNDI DataSource instead of DriverManager:
+src/LoginServlet.java
+src/EmployeeLoginServlet.java
+src/MovielistServlet.java
+src/AutocompleteServlet.java
+src/SingleMovieServlet.java
+src/SingleStarServlet.java
+src/GenresServlet.java
+src/CartServlet.java
+src/PlaceOrderServlet.java
+src/DashboardAddMovieServlet.java
+src/DashboardAddStarServlet.java
+src/DashboardMetadataServlet.java
+
+    - #### Explain how Connection Pooling is utilized in the Fabflix code.
+      - Tomcat is managing a pool of Db connections defined in the context.xml as a JNDI Resource
+      - Each servlet performs a one-time lookup in init():
+      - For each request, the servlet obtains a connection with: try (Connection conn = dataSource.getConnection())
+      - When the try-with-resources closes, the connection is returned to the pool instead of being destroyed
+
+    - #### Explain how Connection Pooling works with two backend SQL.
+      Fablix defines two separate connection pools, each pointing to a different MySQL Server. Each Tomcat backend loads both DataSources and the servlet chooses which pool to use depending on whether it is a read or write request. Reads pull from slave, writes go to master. 
+
+- # Master/Slave
+    - #### Include the filename/path of all code/configuration files in GitHub for routing queries to Master/Slave SQL.
+        - WebContent/META-INF/context.xml
+          both DataSources: jdbc/moviedb_master and jdbc/moviedb_slave
+         - WebContent/WEB-INF/web.xml
+           resource ref declarations for jdbc/moviedb_master and jdbc/moviedb_slave
+          - src/MovielistServlet.java
+- All servlets that use the database and need correct routing:
+src/AutocompleteServlet.java
+src/SingleMovieServlet.java
+src/SingleStarServlet.java
+src/GenresServlet.java
+src/LoginServlet.java / src/EmployeeLoginServlet.java
+src/PlaceOrderServlet.java
+src/DashboardAddMovieServlet.java
+src/DashboardAddStarServlet.java
+    - #### How read/write requests were routed to Master/Slave SQL?
+Any servlets that perform inserts, updates, deletes, or calls stored procedures that modify data would send WRITE requests to master only. 
+Any servlets that only perform SELECT would send READ requests to slave only. 
