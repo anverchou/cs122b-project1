@@ -1,3 +1,5 @@
+package movies;
+
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
@@ -143,10 +145,7 @@ public class MovielistServlet extends HttpServlet {
 
             // Time getting a connection
             long tConn = System.nanoTime();
-            try (Connection conn = DriverManager.getConnection(
-                    "jdbc:mysql://localhost:3306/moviedb?autoReconnect=true&allowPublicKeyRetrieval=true&useSSL=false",
-                    "mytestuser",
-                    "password")) {
+            try (Connection conn = dataSource.getConnection()) {
                 jdbcNs += (System.nanoTime() - tConn);
 
                 String countSql =
@@ -322,7 +321,7 @@ public class MovielistServlet extends HttpServlet {
             }
 
         } catch (Exception e) {
-            request.getServletContext().log("MovielistServlet error:", e);
+            request.getServletContext().log("movies.MovielistServlet error:", e);
             response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
             out.print("{\"error\":\"");
             out.print(escapeJson(e.getMessage()));

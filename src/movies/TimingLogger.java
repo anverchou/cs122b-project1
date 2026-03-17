@@ -1,3 +1,5 @@
+package movies;
+
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.*;
@@ -22,7 +24,7 @@ public class TimingLogger {
                         StandardOpenOption.APPEND
                 );
             } catch (IOException e) {
-                System.err.println("TimingLogger failed: " + e.getMessage());
+                System.err.println("movies.TimingLogger failed: " + e.getMessage());
             }
         }
     }

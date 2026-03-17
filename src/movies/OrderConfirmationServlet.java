@@ -1,3 +1,5 @@
+package movies;
+
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
@@ -8,7 +10,7 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.Map;
 
-@WebServlet(name = "OrderConfirmationServlet", urlPatterns = "/api/order-confirmation")
+@WebServlet(name = "movies.OrderConfirmationServlet", urlPatterns = "/api/order-confirmation")
 public class OrderConfirmationServlet extends HttpServlet {
     /*
      * 1) Verify the user is logged in

@@ -1,3 +1,5 @@
+package movies;
+
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
@@ -14,7 +16,7 @@ import javax.sql.DataSource;
 
 
 // Return JSON of up to 10 entries
-@WebServlet(name = "AutocompleteServlet", urlPatterns = "/api/autocomplete")
+@WebServlet(name = "movies.AutocompleteServlet", urlPatterns = "/api/autocomplete")
 public class AutocompleteServlet extends HttpServlet {
     private DataSource dataSource;
 
@@ -90,7 +92,7 @@ public class AutocompleteServlet extends HttpServlet {
 
             response.getWriter().write("[" + String.join(",", rows) + "]");
         } catch (Exception e) {
-            request.getServletContext().log("AutocompleteServlet error:", e);
+            request.getServletContext().log("movies.AutocompleteServlet error:", e);
             response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
             response.getWriter().write("{\"error\":\"" + escapeJson(e.getMessage()) + "\"}");
         }

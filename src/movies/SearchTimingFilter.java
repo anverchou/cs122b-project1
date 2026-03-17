@@ -1,3 +1,5 @@
+package movies;
+
 import jakarta.servlet.Filter;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -9,7 +11,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import java.io.IOException;
 
 // Measure TS for /movielist requests and logs
-@WebFilter(filterName = "SearchTimingFilter", urlPatterns = {"/movielist"})
+@WebFilter(filterName = "movies.SearchTimingFilter", urlPatterns = {"/movielist"})
 public class SearchTimingFilter implements Filter {
 
     @Override

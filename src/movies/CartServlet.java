@@ -1,3 +1,5 @@
+package movies;
+
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
@@ -17,7 +19,7 @@ import javax.naming.NamingException;
 import javax.sql.DataSource;
 
 // Create movie price on demand and assign price to each movieId when added to cart
-@WebServlet(name = "CartServlet", urlPatterns = "/api/cart")
+@WebServlet(name = "movies.CartServlet", urlPatterns = "/api/cart")
 public class CartServlet extends HttpServlet {
     private DataSource dataSource;
 
@@ -125,7 +127,7 @@ public class CartServlet extends HttpServlet {
 
             // Debug
         } catch (Exception e) {
-            request.getServletContext().log("CartServlet error:", e);
+            request.getServletContext().log("movies.CartServlet error:", e);
             response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
             out.print("{\"status\":\"fail\",\"message\":\"");
             out.print(escapeJson(e.getMessage()));
@@ -226,7 +228,7 @@ public class CartServlet extends HttpServlet {
 
             // DEbug
         } catch (Exception e) {
-            request.getServletContext().log("CartServlet POST error:", e);
+            request.getServletContext().log("movies.CartServlet POST error:", e);
             response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
             out.print("{\"status\":\"fail\",\"message\":\"");
             out.print(escapeJson(e.getMessage()));

@@ -27,26 +27,99 @@
       <artifactId>jasypt</artifactId>
       <version>1.9.3</version>
     </dependency>
+    <dependency>
+      <groupId>redis.clients</groupId>
+      <artifactId>jedis</artifactId>
+      <version>5.1.0</version>
+    </dependency>
   </dependencies>
-  <build>
-    <finalName>fablix</finalName>
-    <sourceDirectory>src</sourceDirectory>
-    <plugins>
-      <plugin>
-        <artifactId>maven-compiler-plugin</artifactId>
-        <configuration>
-          <source>11</source>
-          <target>11</target>
-        </configuration>
-      </plugin>
-      <plugin>
-        <artifactId>maven-war-plugin</artifactId>
-        <version>3.4.0</version>
-        <configuration>
-          <warSourceDirectory>WebContent</warSourceDirectory>
-          <failOnMissingWebXml>false</failOnMissingWebXml>
-        </configuration>
-      </plugin>
-    </plugins>
-  </build>
+
+  <profiles>
+    <!-- Default profile: monolith (all servlets from src/) -->
+    <profile>
+      <id>default</id>
+      <activation>
+        <activeByDefault>true</activeByDefault>
+      </activation>
+      <build>
+        <finalName>fablix</finalName>
+        <sourceDirectory>src</sourceDirectory>
+        <plugins>
+          <plugin>
+            <artifactId>maven-compiler-plugin</artifactId>
+            <configuration>
+              <source>11</source>
+              <target>11</target>
+            </configuration>
+          </plugin>
+          <plugin>
+            <artifactId>maven-war-plugin</artifactId>
+            <version>3.4.0</version>
+            <configuration>
+              <warSourceDirectory>WebContent</warSourceDirectory>
+              <failOnMissingWebXml>false</failOnMissingWebXml>
+            </configuration>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
+
+    <!-- Login microservice profile -->
+    <profile>
+      <id>login</id>
+      <build>
+        <finalName>fablix</finalName>
+        <plugins>
+          <plugin>
+            <artifactId>maven-compiler-plugin</artifactId>
+            <configuration>
+              <source>11</source>
+              <target>11</target>
+              <compileSourceRoots>
+                <compileSourceRoot>${project.basedir}/src/common</compileSourceRoot>
+                <compileSourceRoot>${project.basedir}/src/login</compileSourceRoot>
+              </compileSourceRoots>
+            </configuration>
+          </plugin>
+          <plugin>
+            <artifactId>maven-war-plugin</artifactId>
+            <version>3.4.0</version>
+            <configuration>
+              <warSourceDirectory>WebContent</warSourceDirectory>
+              <failOnMissingWebXml>false</failOnMissingWebXml>
+            </configuration>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
+
+    <!-- Movies microservice profile -->
+    <profile>
+      <id>movies</id>
+      <build>
+        <finalName>fablix</finalName>
+        <plugins>
+          <plugin>
+            <artifactId>maven-compiler-plugin</artifactId>
+            <configuration>
+              <source>11</source>
+              <target>11</target>
+              <compileSourceRoots>
+                <compileSourceRoot>${project.basedir}/src/common</compileSourceRoot>
+                <compileSourceRoot>${project.basedir}/src/movies</compileSourceRoot>
+              </compileSourceRoots>
+            </configuration>
+          </plugin>
+          <plugin>
+            <artifactId>maven-war-plugin</artifactId>
+            <version>3.4.0</version>
+            <configuration>
+              <warSourceDirectory>WebContent</warSourceDirectory>
+              <failOnMissingWebXml>false</failOnMissingWebXml>
+            </configuration>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
+  </profiles>
 </project>

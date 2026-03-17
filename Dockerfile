@@ -4,7 +4,9 @@ WORKDIR /app
 
 COPY . .
 
-RUN mvn clean package
+ARG MVN_PROFILE=default
+
+RUN mvn clean package -P ${MVN_PROFILE}
 
 FROM tomcat:10-jdk11
 

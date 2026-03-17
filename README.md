@@ -13,15 +13,15 @@ Only part 1 of the project is shown in the demo. I was unsuccessful in completin
         Declare entries so servlets can look up pool
 
 - All services that access MySQL and JNDI DataSource instead of DriverManager:
-src/LoginServlet.java
+src/login.LoginServlet.java
 src/EmployeeLoginServlet.java
-src/MovielistServlet.java
-src/AutocompleteServlet.java
-src/SingleMovieServlet.java
+src/movies.MovielistServlet.java
+src/movies.AutocompleteServlet.java
+src/movies.SingleMovieServlet.java
 src/SingleStarServlet.java
-src/GenresServlet.java
-src/CartServlet.java
-src/PlaceOrderServlet.java
+src/movies.GenresServlet.java
+src/movies.CartServlet.java
+src/movies.PlaceOrderServlet.java
 src/DashboardAddMovieServlet.java
 src/DashboardAddStarServlet.java
 src/DashboardMetadataServlet.java
@@ -41,14 +41,14 @@ src/DashboardMetadataServlet.java
           both DataSources: jdbc/moviedb_master and jdbc/moviedb_slave
          - WebContent/WEB-INF/web.xml
            resource ref declarations for jdbc/moviedb_master and jdbc/moviedb_slave
-          - src/MovielistServlet.java
+          - src/movies.MovielistServlet.java
 - All servlets that use the database and need correct routing:
-src/AutocompleteServlet.java
-src/SingleMovieServlet.java
+src/movies.AutocompleteServlet.java
+src/movies.SingleMovieServlet.java
 src/SingleStarServlet.java
-src/GenresServlet.java
-src/LoginServlet.java / src/EmployeeLoginServlet.java
-src/PlaceOrderServlet.java
+src/movies.GenresServlet.java
+src/login.LoginServlet.java / src/EmployeeLoginServlet.java
+src/movies.PlaceOrderServlet.java
 src/DashboardAddMovieServlet.java
 src/DashboardAddStarServlet.java
     - #### How read/write requests were routed to Master/Slave SQL?

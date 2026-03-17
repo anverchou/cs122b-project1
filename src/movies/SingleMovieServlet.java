@@ -1,3 +1,5 @@
+package movies;
+
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
@@ -202,7 +204,7 @@ public class SingleMovieServlet extends HttpServlet {
 
             // Debugging
         } catch (Exception e) {
-            request.getServletContext().log("SingleMovieServlet error: ", e);
+            request.getServletContext().log("movies.SingleMovieServlet error: ", e);
             response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
             out.print("{\"error\":\"Exception in doGet: " + escapeJson(e.getMessage()) + "\"}");
         } finally {

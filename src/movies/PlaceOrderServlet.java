@@ -1,3 +1,5 @@
+package movies;
+
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
@@ -13,11 +15,12 @@ import java.text.SimpleDateFormat;
 import java.util.*;
 import jakarta.servlet.ServletConfig;
 import jakarta.servlet.ServletException;
+
 import javax.naming.InitialContext;
 import javax.naming.NamingException;
 import javax.sql.DataSource;
 
-@WebServlet(name = "PlaceOrderServlet", urlPatterns = "/api/place-order")
+@WebServlet(name = "movies.PlaceOrderServlet", urlPatterns = "/api/place-order")
 public class PlaceOrderServlet extends HttpServlet {
     private DataSource dataSource;
 
@@ -154,7 +157,7 @@ public class PlaceOrderServlet extends HttpServlet {
 
             // DEbug
         } catch (Exception e) {
-            request.getServletContext().log("PlaceOrderServlet error:", e);
+            request.getServletContext().log("movies.PlaceOrderServlet error:", e);
             response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
             out.print("{\"status\":\"fail\",\"message\":\"Exception: " + escapeJson(e.getMessage()) + "\"}");
         } finally {

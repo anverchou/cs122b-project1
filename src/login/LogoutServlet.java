@@ -4,21 +4,15 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
 
-/*
- * Logs the current user out by destroying HTTP session.
- * After invalidation, any session-based login marker is removed
- * Protected endpoints/pages will be blocked by LoginFilter until another valid login
- */
 @WebServlet(name = "LogoutServlet", urlPatterns = "/api/logout")
 public class LogoutServlet extends HttpServlet {
-    /*
-       1) Invalidate the session
-       2) Return a small JSON response indicating success.
-     */
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws IOException {
-        // Destroy session
+        String sessionId = request.getSession().getId();
+        RedisUtil.invalidateSession(sessionId);
         request.getSession().invalidate();
+
+        System.out.println("[LoginService] Logout, sessionId: " + sessionId);
 
         response.setContentType("application/json");
         response.setCharacterEncoding("UTF-8");

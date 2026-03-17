@@ -1,3 +1,5 @@
+package movies;
+
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
@@ -66,7 +68,7 @@ public class GenresServlet extends HttpServlet {
 
             // Debugging
         } catch (Exception e) {
-            request.getServletContext().log("GenresServlet error:", e);
+            request.getServletContext().log("movies.GenresServlet error:", e);
             response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
             response.getWriter().write("{\"error\":\"" + escapeJson(e.getMessage()) + "\"}");
         }

@@ -12,11 +12,6 @@ import javax.naming.InitialContext;
 import javax.naming.NamingException;
 import javax.sql.DataSource;
 
-/*
- * Handles user login
- * Validates the submitted email/password
- * On successful login, stores a session attribute that marks the user as logged in.
- */
 @WebServlet(name = "LoginServlet", urlPatterns = "/api/login")
 public class LoginServlet extends HttpServlet {
     private DataSource dataSource;
@@ -31,48 +26,23 @@ public class LoginServlet extends HttpServlet {
         }
     }
 
-    /*
-     *
-     * 1) Read email/password from request parameters.
-     * 2) Query DB for a customer with that email.
-     * 3) If not found -> fail.
-     * 4) If found, compare passwords -> fail if mismatch.
-     * 5) If match -> set session attribute "user" and return success JSON.
-     */
-
-    // Keep defaults, but allow env vars to override (handy on AWS)
-
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws IOException {
 
         response.setContentType("application/json");
         response.setCharacterEncoding("UTF-8");
 
-        // Read form parameters
         String email = request.getParameter("email");
         String password = request.getParameter("password");
-
-        // reCAPTCHA token
-        String gRecaptchaResponse = request.getParameter("g-recaptcha-response");
 
         if (email == null) email = "";
         if (password == null) password = "";
 
-        try {
-            // Verify reCAPTCHA
-            try {
-                RecaptchaVerifyUtils.verify(gRecaptchaResponse);
-            } catch (Exception e) {
-                response.getWriter().write(
-                        "{\"status\":\"fail\",\"message\":\"reCAPTCHA verification failed. Please try again.\"}"
-                );
-                return;
-            }
+        System.out.println("[LoginService] Login request for: " + email);
 
-            // Open Database connection
+        try {
             try (Connection conn = dataSource.getConnection()) {
 
-                // 1) Check if user exists
                 String q1 = "SELECT id, password FROM customers WHERE email = ?";
                 Integer customerId = null;
                 String dbPassword = null;
@@ -87,13 +57,11 @@ public class LoginServlet extends HttpServlet {
                     }
                 }
 
-                // If no match email, user does not exist
                 if (customerId == null) {
                     response.getWriter().write("{\"status\":\"fail\",\"message\":\"user " + escapeJson(email) + " doesn't exist\"}");
                     return;
                 }
 
-                // 2) Validate password
                 StrongPasswordEncryptor encryptor = new StrongPasswordEncryptor();
                 boolean passwordOk = false;
                 boolean plaintextMatched = false;
@@ -111,7 +79,6 @@ public class LoginServlet extends HttpServlet {
                     }
                 }
 
-                // Incorrect password
                 if (!passwordOk) {
                     response.getWriter().write("{\"status\":\"fail\",\"message\":\"incorrect password\"}");
                     return;
@@ -126,12 +93,15 @@ public class LoginServlet extends HttpServlet {
                     }
                 }
 
-                // 3) Successful login
-                request.getSession().setAttribute("user", customerId);
+                // Store user in Redis session instead of Tomcat session
+                String sessionId = request.getSession().getId();
+                RedisUtil.setSessionAttribute(sessionId, "user", String.valueOf(customerId));
+
+                System.out.println("[LoginService] Login success for user ID: " + customerId + ", sessionId: " + sessionId);
+
                 response.getWriter().write("{\"status\":\"success\",\"message\":\"success\"}");
             }
 
-            // Log errors
         } catch (Exception e) {
             request.getServletContext().log("Login error: ", e);
             response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
@@ -141,11 +111,6 @@ public class LoginServlet extends HttpServlet {
 
             response.getWriter().write("{\"status\":\"fail\",\"message\":\"Exception: " + escapeJson(msg) + "\"}");
         }
-    }
-
-    private static String envOrDefault(String key, String def) {
-        String v = System.getenv(key);
-        return (v == null || v.isBlank()) ? def : v;
     }
 
     private static String escapeJson(String s) {

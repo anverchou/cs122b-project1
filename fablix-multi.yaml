@@ -1,0 +1,130 @@
+## Redis Deployment and Service
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: redis
+  labels:
+    app: redis
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: redis
+  template:
+    metadata:
+      labels:
+        app: redis
+    spec:
+      containers:
+        - name: redis
+          image: redis:7-alpine
+          ports:
+            - containerPort: 6379
+          resources:
+            limits:
+              cpu: "0.5"
+              memory: "256Mi"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: redis
+spec:
+  selector:
+    app: redis
+  ports:
+    - port: 6379
+      targetPort: 6379
+  type: ClusterIP
+---
+## Login Deployment and Service
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: fablix-login
+  labels:
+    app: fablix-login
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: fablix-login
+  template:
+    metadata:
+      labels:
+        app: fablix-login
+    spec:
+      containers:
+        - name: fablix-login-container
+          image: anverchou/fabflix-login:v1
+          imagePullPolicy: Always
+          ports:
+            - name: http
+              containerPort: 8080
+          env:
+            - name: REDIS_HOST
+              value: "redis"
+          resources:
+            limits:
+              cpu: "1"
+              memory: "1Gi"
+      imagePullSecrets:
+        - name: regcred
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: fablix-login-service
+spec:
+  selector:
+    app: fablix-login
+  ports:
+    - name: http
+      port: 8080
+  type: ClusterIP
+---
+## Movies Deployment and Service
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: fablix-movies
+  labels:
+    app: fablix-movies
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: fablix-movies
+  template:
+    metadata:
+      labels:
+        app: fablix-movies
+    spec:
+      containers:
+        - name: fablix-movies-container
+          image: anverchou/fabflix-movies:v1
+          imagePullPolicy: Always
+          ports:
+            - name: http
+              containerPort: 8080
+          env:
+            - name: REDIS_HOST
+              value: "redis"
+          resources:
+            limits:
+              cpu: "1"
+              memory: "1Gi"
+      imagePullSecrets:
+        - name: regcred
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: fablix-movies-service
+spec:
+  selector:
+    app: fablix-movies
+  ports:
+    - name: http
+      port: 8080
+  type: ClusterIP
